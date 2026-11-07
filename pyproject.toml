@@ -1,0 +1,9 @@
+[project]
+name = "hermes-hacmdn"
+version = "0.2.0"
+description = "Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) plugin"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Jonathan Korstad" }]
+requires-python = ">=3.11"
+dependencies = []

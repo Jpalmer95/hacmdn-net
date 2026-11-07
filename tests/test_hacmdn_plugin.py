@@ -1,0 +1,261 @@
+"""Unit and integration test suite for the HACMDN-Net (`hacmdn`) Hermes Agent Plugin."""
+
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+import pytest
+
+import __init__ as plugin_root
+import cli_commands
+import network
+import tools
+
+
+@pytest.fixture(autouse=True)
+def isolated_hacmdn_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Isolate every test against a fresh SQLite DB in tmp_path."""
+    db_file = tmp_path / "test_hacmdn.db"
+    monkeypatch.setenv("HACMDN_DB_PATH", str(db_file))
+    network._NETWORK_INSTANCE = None
+    yield db_file
+    network._NETWORK_INSTANCE = None
+
+
+class DummyPluginContext:
+    def __init__(self) -> None:
+        self.tools: dict[str, dict[str, Any]] = {}
+        self.commands: dict[str, dict[str, Any]] = {}
+        self.cli_commands: dict[str, dict[str, Any]] = {}
+        self.skills: dict[str, Path] = {}
+
+    def register_tool(self, name: str, toolset: str, schema: dict, handler: Any, emoji: str = "") -> None:
+        self.tools[name] = {"toolset": toolset, "schema": schema, "handler": handler, "emoji": emoji}
+
+    def register_command(self, name: str, handler: Any, description: str = "", args_hint: str = "") -> None:
+        self.commands[name] = {"handler": handler, "description": description, "args_hint": args_hint}
+
+    def register_cli_command(self, name: str, help: str, setup_fn: Any, handler_fn: Any) -> None:
+        self.cli_commands[name] = {"help": help, "setup_fn": setup_fn, "handler_fn": handler_fn}
+
+    def register_skill(self, name: str, path: Path) -> None:
+        self.skills[name] = path
+
+
+def test_plugin_registration():
+    ctx = DummyPluginContext()
+    plugin_root.register(ctx)
+    assert set(ctx.tools.keys()) == {
+        "hacmdn_route_query",
+        "hacmdn_publish_specialist",
+        "hacmdn_bid_task",
+        "hacmdn_bounty_flywheel",
+        "hacmdn_network_status",
+    }
+    assert "hacmdn" in ctx.commands
+    assert "hacmdn" in ctx.cli_commands
+    assert "hacmdn-network" in ctx.skills
+    assert ctx.skills["hacmdn-network"].is_file()
+
+
+def test_network_status_seeded():
+    res = json.loads(tools.hacmdn_network_status({}))
+    assert res["network_codename"] == "HACMDN-Net"
+    assert res["specialists_count"] == 3
+    spec_ids = {s["spec_id"] for s in res["specialists"]}
+    assert "qwen3-0.6b-neighborhood-connector-v1" in spec_ids
+    assert "qwen3-0.6b-sql-window-rewriter-v1" in spec_ids
+    assert "qwen3-0.6b-json-rpc-tool-caller-v1" in spec_ids
+
+
+def test_eval_before_gossip_rejects_low_margin_and_unapproved_base():
+    # 1. Unapproved base model family -> rejected (Principle 4)
+    bad_base = json.loads(
+        tools.hacmdn_publish_specialist(
+            {
+                "spec_id": "llama-random-specialist",
+                "base_model": "meta-llama/Llama-3-8B",
+                "task_descriptor": "Random non-Qwen base model",
+                "domains": ["sql"],
+                "eval_score": 0.90,
+                "base_model_score": 0.30,
+            }
+        )
+    )
+    assert bad_base["accepted"] is False
+    assert bad_base["reason"] == "unapproved_base_model"
+
+    # 2. Insufficient eval margin (< +0.15 over base) -> rejected (Principle 5)
+    low_margin = json.loads(
+        tools.hacmdn_publish_specialist(
+            {
+                "spec_id": "qwen3-0.6b-weak-sql",
+                "base_model": "Qwen/Qwen3-0.6B",
+                "task_descriptor": "Weak SQL model that barely beats base",
+                "domains": ["sql"],
+                "eval_score": 0.38,
+                "base_model_score": 0.31,
+            }
+        )
+    )
+    assert low_margin["accepted"] is False
+    assert low_margin["reason"] == "failed_eval_before_gossip"
+
+    # 3. Valid specialist beating base by >= 0.15 -> accepted & gossiped
+    good = json.loads(
+        tools.hacmdn_publish_specialist(
+            {
+                "spec_id": "qwen3-0.6b-Systemd-Unit-Auditor-v1",
+                "base_model": "Qwen/Qwen3-0.6B",
+                "task_descriptor": "Audits Linux systemd service units and Tailscale firewall bindings",
+                "domains": ["devops", "systemd", "tailscale"],
+                "eval_score": 0.89,
+                "base_model_score": 0.29,
+                "abstain_threshold": 0.63,
+            }
+        )
+    )
+    assert good["accepted"] is True
+    assert good["verified_on_entry"] is True
+    assert good["eval_margin"] == pytest.approx(0.60)
+    assert good["descriptor"]["diversity_fingerprint"].startswith("divfp:v1:")
+
+
+def test_bidding_and_routing_sql_and_json_rpc():
+    # SQL Window Function routing
+    sql_route = json.loads(
+        tools.hacmdn_route_query(
+            {
+                "query": "Rewrite this PostgreSQL CTE query with PARTITION BY department_id into a ROW_NUMBER and LAG window function",
+            }
+        )
+    )
+    assert sql_route["status"] == "ok"
+    assert sql_route["routed_to"] == "qwen3-0.6b-sql-window-rewriter-v1"
+    assert sql_route["confidence"] >= sql_route["abstain_threshold"]
+    assert "OVER (PARTITION BY" in sql_route["output"]
+    assert sql_route["settlement_receipt"]["escrow_credits"] > 0
+
+    # JSON-RPC Tool Call synthesis routing
+    rpc_route = json.loads(
+        tools.hacmdn_route_query(
+            {
+                "query": "Synthesize a JSON-RPC 2.0 tool_call payload and Python function signature for calculate_rebate",
+            }
+        )
+    )
+    assert rpc_route["status"] == "ok"
+    assert rpc_route["routed_to"] == "qwen3-0.6b-json-rpc-tool-caller-v1"
+    assert json.loads(rpc_route["output"])["jsonrpc"] == "2.0"
+
+    # Bidding round includes both direct worker bids and Neighborhood Connector proxy bids
+    bids = json.loads(
+        tools.hacmdn_bid_task(
+            {
+                "query": "Rewrite PostgreSQL CTE into window function",
+                "include_proxy_bids": True,
+            }
+        )
+    )
+    bid_types = {b["bid_type"] for b in bids["ranked_bids"]}
+    assert "direct_worker_bid" in bid_types
+    assert "connector_proxy_bid" in bid_types
+
+
+def test_zerogpu_community_buffer_escalation():
+    # Publish a specialist whose local P2P node is offline (`zerogpu_buffered`)
+    tools.hacmdn_publish_specialist(
+        {
+            "spec_id": "qwen3-0.6b-devops-traefik-v1",
+            "base_model": "Qwen/Qwen3-0.6B",
+            "task_descriptor": "Generates Traefik dynamic YAML and Docker container routing rules",
+            "domains": ["devops", "traefik", "docker"],
+            "eval_score": 0.91,
+            "base_model_score": 0.30,
+            "worker_status": "zerogpu_buffered",
+        }
+    )
+    routed = json.loads(
+        tools.hacmdn_route_query(
+            {
+                "query": "Generate a Traefik dynamic YAML router for a Docker container on port 3002",
+                "domain_hint": "devops",
+                "allow_zerogpu_buffer": True,
+            }
+        )
+    )
+    assert routed["status"] == "ok"
+    assert routed["escalation_tier"] == 3
+    assert routed["served_via"] == "jkorstad/hacmdn-community-buffer"
+
+
+def test_out_of_domain_abstention_opens_jit_bounty():
+    ood = json.loads(
+        tools.hacmdn_route_query(
+            {
+                "query": "Calculate the orbital perturbation of a retrograde Trojan asteroid under Jupiter J2 harmonics",
+                "require_specialist_only": True,
+            }
+        )
+    )
+    assert ood["status"] == "abstain"
+    assert ood["escalation_tier"] == 5
+    assert "proposal" in ood
+    bounty_id = ood["proposal"]["bounty_id"]
+    assert bounty_id.startswith("bounty-")
+
+    # Claim and fulfill the bounty through the JIT Fine-Tuning Flywheel
+    claim = json.loads(
+        tools.hacmdn_bounty_flywheel(
+            {
+                "action": "claim_bounty",
+                "bounty_id": bounty_id,
+                "contributor_id": "jkorstad-rtx4070ti",
+            }
+        )
+    )
+    assert claim["claimed_by"] == "jkorstad-rtx4070ti"
+
+    submit = json.loads(
+        tools.hacmdn_bounty_flywheel(
+            {
+                "action": "submit_bounty_adapter",
+                "bounty_id": bounty_id,
+                "eval_score": 0.90,
+                "base_model_score": 0.28,
+            }
+        )
+    )
+    assert submit["status"] == "fulfilled_and_paid"
+    assert submit["published_specialist"]["accepted"] is True
+
+
+def test_governance_vote_and_idle_pool_and_slash_command():
+    vote = json.loads(
+        tools.hacmdn_bounty_flywheel(
+            {
+                "action": "vote_directive",
+                "directive_topic": "open-science-antimalarial-docking",
+                "contributor_id": "jkorstad",
+            }
+        )
+    )
+    assert vote["total_weight"] > 0
+
+    idle = json.loads(
+        tools.hacmdn_bounty_flywheel(
+            {
+                "action": "run_idle_pool_task",
+                "idle_pool_category": "local-business-aid",
+            }
+        )
+    )
+    assert idle["status"] == "completed_and_verified"
+    assert idle["credits_earned"] > 0
+
+    slash_out = cli_commands.handle_slash_command("status")
+    assert "HACMDN-Net" in slash_out
+    assert "qwen3-0.6b-neighborhood-connector-v1" in slash_out

@@ -1,0 +1,61 @@
+name: hacmdn
+label: HACMDN-Net
+version: 0.2.0
+manifest_version: 2
+api_version: 1
+author: Jonathan Korstad
+license: Apache-2.0
+homepage: https://github.com/Jpalmer95/hacmdn-net
+requires_hermes: ">=0.21.6"
+description: >
+  Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) —
+  neighborhood-based routing across tiny fine-tuned Qwen3 specialists with
+  semantic-entropy abstention, confidence-weighted bidding, progressive upstream
+  escalation, eval-before-gossip verification, a JIT fine-tuning bounty flywheel,
+  and a Hugging Face ZeroGPU community load-balancing buffer.
+tags:
+  - decentralized
+  - routing
+  - micro-models
+  - qwen3
+  - zerogpu
+  - huggingface
+  - specialist-network
+provides_tools:
+  - hacmdn_route_query
+  - hacmdn_publish_specialist
+  - hacmdn_bid_task
+  - hacmdn_bounty_flywheel
+  - hacmdn_network_status
+provides_hooks: []
+config_schema:
+  neighborhood_id:
+    type: str
+    default: "nbh-austin-core"
+    label: "Neighborhood ID"
+    description: "Default local neighborhood cluster ID"
+  zerogpu_space_id:
+    type: str
+    default: "jkorstad/hacmdn-community-buffer"
+    label: "ZeroGPU Buffer Space"
+    description: "Hugging Face Space ID used as Tier 3 cold-start & gap load-balancing buffer"
+  hf_collection_slug:
+    type: str
+    default: "jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5"
+    label: "HF Community Collection"
+    description: "Canonical Hugging Face Collection storing verified community specialist adapters"
+  enable_zerogpu_fallback:
+    type: bool
+    default: true
+    label: "Enable ZeroGPU Buffer Fallback"
+    description: "Route to the Hugging Face ZeroGPU Community Buffer when local P2P workers are offline"
+  sampling_audit_rate:
+    type: float
+    default: 0.05
+    label: "Sampling Audit Rate"
+    description: "Fraction of routed tasks cross-audited for correctness verification (0.05 = 5%)"
+  hf_token:
+    type: secret
+    env: HF_TOKEN
+    label: "Hugging Face Token"
+    description: "Optional HF token for ZeroGPU Space quota and Hub collection sync"
