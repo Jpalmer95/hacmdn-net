@@ -338,9 +338,16 @@ def _get_hf_token() -> str:
     return ""
 
 
+STOPWORDS = frozenset({
+    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "in",
+    "into", "is", "it", "of", "on", "or", "that", "the", "this", "to", "using",
+    "was", "with", "when", "where", "which", "who", "will", "only", "any",
+})
+
+
 def tokenize_words(text: str) -> list[str]:
     """Lowercase alphanumeric + underscore/hyphen tokenizer."""
-    return re.findall(r"[a-z0-9_+-]+", (text or "").lower())
+    return [t for t in re.findall(r"[a-z0-9_+-]+", (text or "").lower()) if t not in STOPWORDS]
 
 
 def compute_descriptor_embedding(text: str, domains: Optional[list[str]] = None) -> list[float]:
@@ -834,7 +841,12 @@ class HermesSpecialistNetwork:
             emb_sim = max(0.0, cosine_similarity(query_emb, spec_emb))
 
             domain_match = 1.0 if triage["primary_domain"] in domains else 0.0
-            alignment = max(emb_sim, domain_match * triage["alignment"])
+            if triage["primary_domain"] == "uncovered-niche":
+                alignment = min(triage["alignment"], emb_sim * 0.4)
+            elif domain_match > 0:
+                alignment = max(emb_sim, triage["alignment"])
+            else:
+                alignment = emb_sim * 0.55
 
             # Sample 3 semantic-entropy continuations for this candidate
             samples = self._sample_candidate_continuations(spec_id, query, alignment)
