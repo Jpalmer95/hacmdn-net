@@ -477,18 +477,26 @@ def infer_query_domain(query: str, domain_hint: str = "") -> dict[str, Any]:
     scores: dict[str, float] = {}
     for dom, vocab in DOMAIN_ANCHORS.items():
         hits = sum(1 for t in tokens if t in vocab)
-        # Check substring patterns for SQL & JSON-RPC
         q_lower = query.lower()
-        if dom == "sql" and any(p in q_lower for p in ("select ", "with ", "from ", "partition by", "row_number", "window function", "postgres")):
+        if dom == "sql" and any(
+            p in q_lower
+            for p in ("select ", "partition by", "row_number", "dense_rank", "window function", "postgres", "cte", "subquery")
+        ):
             hits += 4
-        if dom == "json-rpc" and any(p in q_lower for p in ("jsonrpc", "json-rpc", "tool_call", "function signature", "schema", "def ", "parameters")):
+        if dom == "json-rpc" and any(
+            p in q_lower
+            for p in ("jsonrpc", "json-rpc", "tool_call", "tool call", "function signature", "parameters")
+        ):
             hits += 4
-        if dom == "routing" and any(p in q_lower for p in ("neighborhood", "specialist", "route", "bounty", "organizer", "abstain")):
-            hits += 4
-        scores[dom] = round(min(1.0, hits / 5.0), 4)
+        if dom == "routing" and any(
+            p in q_lower
+            for p in ("neighborhood", "organizer", "connector", "bounty", "abstain", "upchain")
+        ):
+            hits += 6
+        scores[dom] = round(hits / 5.0, 4)
 
     best_dom = max(scores, key=lambda k: scores[k]) if scores else "unknown"
-    best_score = scores.get(best_dom, 0.0)
+    best_score = min(1.0, scores.get(best_dom, 0.0))
     if best_score < 0.20:
         return {
             "primary_domain": "uncovered-niche",
