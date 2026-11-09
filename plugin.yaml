@@ -8,14 +8,13 @@ license: Apache-2.0
 homepage: https://github.com/Jpalmer95/hacmdn-net
 requires_hermes: ">=0.21.6"
 description: >
-  Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) —
+  Hermes Agent Community Microtuned Decentralized Node Network (HACMDN-Net) —
   neighborhood-based routing across consumer-grade micro-to-32B and sparse-MoE
-  specialists (classifiers, translators, code/SQL/JSON-RPC, multimodal, and
-  domain reasoners) with topological Connector referrals, semantic-entropy
-  abstention, confidence-weighted bidding, Game-Guard hardware profiling,
-  value-backed 70/10/10/10 attribution with a small-node Fair-Share Cap and
-  Patron Compute Overflow for DeSci, an execution-verified distillation
-  factory, and an optional tri-surface GUI hub.
+  specialists (10M classifiers/translators up to 32B/MoE domain reasoners)
+  with topological Connector referrals, semantic-entropy abstention, missing-
+  expertise gap sensing, validator health checks & generational base-model
+  renewal, Game-Guard hardware profiling, and value-backed 70/10/10/10
+  attribution with a Fair-Share Cap and Patron Compute Overflow for DeSci.
 tags:
   - decentralized
   - routing

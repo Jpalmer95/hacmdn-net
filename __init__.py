@@ -1,4 +1,4 @@
-"""HACMDN-Net (`hacmdn`) — Hermes Agent Community Microtuned Decentralized Network Plugin."""
+"""HACMDN-Net (`hacmdn`) — Hermes Agent Community Microtuned Decentralized Node Network Plugin."""
 
 from __future__ import annotations
 

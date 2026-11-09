@@ -2580,7 +2580,13 @@ class HermesSpecialistNetwork:
 
         return {
             "network_codename": "HACMDN-Net",
+            "network_full_name": "Hermes Agent Community Microtuned Decentralized Node Network",
             "spec_version": "1.0.0",
+            "self_healing_lifecycle": {
+                "missing_expertise_sensing": "Tracks abstention clusters & Shortage Scores to recommend new niche fine-tunes triggered once pledged community compute clears the bounty threshold",
+                "validator_health_checks": "5% sampling audits + rolling conformal holdout probes detect model drift or degraded calibration",
+                "generational_renewal": "Automatically benchmarks specialists against newer base-model releases and fresh domain data to phase out stale adapters and re-distill upgraded versions on dynamic community compute",
+            },
             "approved_base_family": list(APPROVED_BASE_MODELS),
             "approved_harnesses": list(APPROVED_HARNESSES),
             "hf_community_collection": "https://huggingface.co/collections/jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5",

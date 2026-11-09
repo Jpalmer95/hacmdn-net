@@ -1,6 +1,6 @@
 # HACMDN-Net — Comprehensive Phased Master Plan (v1.0.0 — All Milestones Complete)
 
-**Project:** Hermes Agent Community Microtuned Decentralized Network (`hacmdn-net`)  
+**Project:** Hermes Agent Community Microtuned Decentralized Node Network (`hacmdn-net`)  
 **Repository:** `https://github.com/Jpalmer95/hacmdn-net`  
 **Hugging Face Collection:** `https://huggingface.co/collections/jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5`  
 **ZeroGPU Community Buffer:** `https://huggingface.co/spaces/jkorstad/hacmdn-community-buffer`  
