@@ -37,7 +37,12 @@ APPROVED_BASE_MODELS = (
     "Qwen/Qwen3-0.6B",
     "Qwen/Qwen3-1.7B",
     "Qwen/Qwen3-4B",
+    "Qwen/Qwen3-8B",
+    "Qwen/Qwen3-14B",
+    "Qwen/Qwen3-32B",
+    "Qwen/Qwen3-30B-A3B",
     "NousResearch/Hermes-4-14B",
+    "NousResearch/Hermes-4-32B",
 )
 
 APPROVED_HARNESSES = (
@@ -2488,9 +2493,11 @@ class HermesSpecialistNetwork:
             snapshot = {
                 "operator_id": operator_id,
                 "anti_whale_policy": {
+                    "policy_name": "Community Fair-Share Cap & Patron Compute Overflow",
                     "daily_personal_cap_credits": daily_cap,
-                    "split_formula": "70% Worker | 10% Adapter Author Royalty | 10% Connector/Organizer | 10% Shared Community Pool",
-                    "overflow_policy": "100% of compute above 50.0 cr/day converts into a Philanthropic Community & Open-Science Dividend Grant",
+                    "value_backing": "100% backed by verified tasks & workflows actually completed on the network (zero unbacked inflation)",
+                    "split_formula": "70% Executing Worker | 10% Specialist Author Royalty | 10% Connector/Organizer | 10% DeSci & Community Pool",
+                    "overflow_policy": "Preserves low-compute contributor earnings against dilution while welcoming large-scale compute above 50.0 cr/day as a Community Patron & DeSci Overflow Grant",
                     "network_datacenter_overflow_pool_credits": round(total_overflow, 4),
                 },
                 "earnings_summary": {

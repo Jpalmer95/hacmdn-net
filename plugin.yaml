@@ -9,11 +9,13 @@ homepage: https://github.com/Jpalmer95/hacmdn-net
 requires_hermes: ">=0.21.6"
 description: >
   Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) —
-  neighborhood-based routing across tiny fine-tuned Qwen3 specialists with
-  semantic-entropy abstention, confidence-weighted bidding, multi-pool mesh
-  allocation, Game-Guard hardware profiling, anti-whale capped 70/10/10/10
-  community attribution, a JIT fine-tuning flywheel, a Hugging Face ZeroGPU
-  buffer, and an optional lightweight GUI hub.
+  neighborhood-based routing across consumer-grade micro-to-32B and sparse-MoE
+  specialists (classifiers, translators, code/SQL/JSON-RPC, multimodal, and
+  domain reasoners) with topological Connector referrals, semantic-entropy
+  abstention, confidence-weighted bidding, Game-Guard hardware profiling,
+  value-backed 70/10/10/10 attribution with a small-node Fair-Share Cap and
+  Patron Compute Overflow for DeSci, an execution-verified distillation
+  factory, and an optional tri-surface GUI hub.
 tags:
   - decentralized
   - routing

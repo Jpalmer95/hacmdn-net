@@ -266,15 +266,15 @@ def render_hub_html(snapshot: dict[str, Any]) -> str:
 
   <div class="panel" style="margin-bottom:10px;">
     <div class="panel-title">
-      <span>🛡️ Anti-Whale Community Cap &amp; Datacenter Overflow Protection</span>
-      <span class="item-sub">{worker_cr:.2f} / {daily_cap:.1f} cr daily personal cap ({cap_pct:.1f}%)</span>
+      <span>🤝 Community Fair-Share Cap &amp; Value-Backed Patron Overflow</span>
+      <span class="item-sub">{worker_cr:.2f} / {daily_cap:.1f} cr daily fair-share cap ({cap_pct:.1f}%)</span>
     </div>
     <div class="bar-bg"><div class="bar-fill" style="width:{max(4.0, min(100.0, cap_pct))}%;"></div></div>
     <div class="item-sub">
       {html.escape(str(policy.get("split_formula", "")))} — {html.escape(str(policy.get("overflow_policy", "")))}
     </div>
     <div class="btn-row">
-      <button class="act-btn" data-hermes-send="Use hacmdn_contributor_hub with action='simulate_datacenter_overflow' and raw_datacenter_credits=120.0, then refresh the hub preview widget">⚡ Simulate Datacenter Overflow (+120 cr)</button>
+      <button class="act-btn" data-hermes-send="Use hacmdn_contributor_hub with action='simulate_datacenter_overflow' and raw_datacenter_credits=120.0, then refresh the hub preview widget">⚡ Simulate Patron Compute Overflow (+120 cr)</button>
       <button class="act-btn" data-hermes-send="Use hacmdn_contributor_hub with action='settle_l402_and_dividends', then refresh the hub preview widget">⚡ Settle L402 Lightning &amp; Dividends</button>
       <button class="act-btn" data-hermes-send="Use hacmdn_worker_pool with action='sync_rendezvous_daemon', then refresh the hub preview widget">🛰️ Sync Rendezvous + GGUF Daemon</button>
       <button class="act-btn" data-hermes-send="Use hacmdn_worker_pool with action='gossip_and_holepunch_p2p', then refresh the hub preview widget">🔗 Iroh QUIC + BLAKE3 Gossip</button>

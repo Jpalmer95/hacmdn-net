@@ -76,7 +76,7 @@ function HacmdnDesktopPane({ ctx }) {
         children: [
           jsx('div', {
             className: 'font-medium text-(--ui-text-secondary)',
-            children: '70/10/10/10 Attribution & Anti-Whale Cap',
+            children: '70/10/10/10 Value-Backed Attribution & Fair-Share Cap',
           }),
           jsx('div', {
             className: 'mt-1 text-[11px] text-(--ui-text-tertiary)',
