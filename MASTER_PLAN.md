@@ -1,67 +1,103 @@
-# HACMDN-Net — Master Plan
+# HACMDN-Net — Comprehensive Phased Master Plan (v0.3)
 
 **Project:** Hermes Agent Community Microtuned Decentralized Network (`hacmdn-net`)  
 **Repository:** `https://github.com/Jpalmer95/hacmdn-net`  
-**Hugging Face Ecosystem:** `jkorstad` (Models, ZeroGPU Buffer Space, Community Collection)  
+**Hugging Face Collection:** `https://huggingface.co/collections/jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5`  
+**ZeroGPU Community Buffer:** `https://huggingface.co/spaces/jkorstad/hacmdn-community-buffer`  
 **License:** Apache-2.0 (`Copyright 2026 Jonathan Korstad`)
 
 ---
 
-## Vision & Core Thesis
+## 1. Executive Summary & Core Philosophy
 
-A decentralized neighborhood of tiny, minimum-viable fine-tuned specialist models (`Qwen/Qwen3-0.6B` Apache-2.0 base family) with **calibrated brutal honesty (abstention)**, interconnected through **Neighborhood Connectors** and **Organizer Super-Peers**, that bids on tasks, routes progressively upstream when out-of-scope, uses **Hugging Face ZeroGPU Spaces** as a cold-start load-balancing buffer, and turns recurring abstentions into a **JIT fine-tuning flywheel**.
+**HACMDN-Net** enables anyone, anywhere to install a lightweight **Hermes Agent Plugin (`hacmdn`)**, join a decentralized neighborhood of tiny fine-tuned specialist models (`Qwen/Qwen3-0.6B` to `4B` Apache-2.0 base family), and opt in their spare CPU or GPU cycles to serve high-efficacy narrow tasks, train missing niche models, or advance community-voted open science and local business initiatives.
 
----
-
-## Recorded Architectural Decisions
-
-1. **Single Base Family (`Qwen/Qwen3-0.6B`, Apache-2.0):** Standardized so all community LoRA specialists share a compatible weight space for `mergekit` (DARE/TIES) "neighborhood soup" merges and rapid adapter hot-swapping on a single 12 GB GPU or ZeroGPU Space.
-2. **Brutal Honesty as a First-Class Protocol Primitive:** Every specialist is trained on both positive domain examples and explicit out-of-domain abstention examples (`[ABSTAIN: OUT_OF_SCOPE]`), combined with semantic-entropy / token-confidence conformal calibration (`arXiv:2502.11021`, `arXiv:2502.06884`).
-3. **Neighborhood Connector + Confidence-Weighted Bidding:** Rather than a monolithic central router, Model #1 (`qwen3-0.6b-neighborhood-connector-v1`) knows the heads of niche groupings and coordinates a bidding protocol where specialists (or connectors bidding on behalf of downstream micro-models) compete on `Confidence * EvalMargin * Diversity / (Latency * Cost)`.
-4. **6-Tier Progressive Upstream Escalation:** `Tier 0 (Local Micro-Specialist)` → `Tier 1 (Neighborhood Connector + Peer Bid Winner)` → `Tier 2 (Organizer Super-Peer Cross-Neighborhood kNN)` → `Tier 3 (HF ZeroGPU Community Buffer)` → `Tier 4 (Upstream Generalist / Frontier)` → `Tier 5 (Network Abstention + JIT Bounty Proposal)`.
-5. **Eval-Before-Gossip (`Verified-on-Entry`):** No capability descriptor enters neighborhood gossip unless its canonical eval score beats the untouched `Qwen/Qwen3-0.6B` base model by at least the domain margin (`+0.15`).
-6. **ZeroGPU Community Buffer + HF Collection:** Solves early-network P2P churn by mirroring approved community specialists in a Hugging Face Collection and serving cold/unhosted niches via a Gradio 6 ZeroGPU Space (`jkorstad/hacmdn-community-buffer`).
+Unlike monolithic cloud APIs or datacenter-dominated DePIN networks:
+1. **Small Models Excel by Refusing to Be Generalists:** A `0.6B` LoRA model trained on a strict input/output contract with **calibrated brutal honesty (`[ABSTAIN: OUT_OF_SCOPE]`)** matches or beats generalists on its narrow domain while running comfortably on a laptop CPU or spare gaming PC threads.
+2. **Neighborhoods Over Central Routers:** Tasks route through fine-tuned **Neighborhood Connectors** (`Model #1`), **Confidence-Weighted Bidding**, and **Organizer Super-Peers** up a **6-Tier Progressive Escalation Ladder**, backed by a **Hugging Face ZeroGPU Buffer** when P2P workers are offline.
+3. **Community-First Attribution with Anti-Whale / Anti-Datacenter Caps:** Every contributor earns transparent attribution and shared-entity payout credits across a **70% Worker / 10% Adapter Author Royalty / 10% Connector / 10% Community Pool** split. Per-operator daily rewards follow a **concave curve with a hard Community Cap**; any excess compute donated by mega-clusters or datacenters overflows into the **Shared Community Dividend & Open-Science Pool**, enriching small contributors rather than diluting them.
+4. **Optional Lightweight GUI Hub:** Ships with an opt-in GUI across **Hermes Desktop** (`desktop/plugin.js`), **Hermes Web Dashboard** (`dashboard/`), and a **Standalone Local Hub (`hermes hacmdn gui`)** so operators can see live compute allocation, inference contributed, ideas pitched, and accumulated earnings.
 
 ---
 
-## Roadmap & Milestones
+## 2. Gap Analysis: What Was Built in v0.1–v0.2 vs. What Completes the Full Vision
 
-### Phase 1: Thesis, Spec & Repository Foundation
+| Pillar | Status in v0.2 | Gap Identified for Global Community Release | Solution Architecture (v0.3 → v1.0) |
+|---|---|---|---|
+| **1. Decentralized Mesh & Work Pools** | Local SQLite + HF ZeroGPU Space fallback | Home nodes behind NAT/CGNAT need zero-config outbound joining & concurrent multi-pool work queues | **Two-Layer Mesh:** Outbound HTTPS/WSS Rendezvous Work-Pool Coordinator (HF Space/FastAPI) for instant NAT traversal + **Iroh (Rust QUIC) / Hivemind libp2p** P2P gossip & hole-punching, sharded into **4 Concurrent Work Pools** (`Interactive-Micro`, `Parallel-Batch`, `Idle-Open-Science`, `JIT-FineTune`). |
+| **2. Hardware Profiler & Gap Auto-Loader** | VRAM-aware check in training script | Plugin needs an autonomous daemon that detects spare CPU/RAM/VRAM (respecting active games/apps) and loads whichever specialist the neighborhood lacks | **Game-Guard Hardware Profiler + Petals-Style Shortage Scorer:** Monitors GPU/CPU load; never evicts user workloads; calculates `ShortageScore = Demand / OnlineSupply` and hot-pulls the most needed LoRA adapter from the HF Community Collection. |
+| **3. High-Efficacy Niche Training Factory** | `run_pilot_experiment.py` proved `100%` held-out accuracy & `1.000` AUC on 3 models | Need an automated pipeline that turns any recurring abstention gap into an execution-verified micro-specialist without hand-writing datasets | **Execution-Verified Teacher Distillation + Boundary Abstention Factory:** Teacher LLM generates candidate pairs $\rightarrow$ deterministic verifier (SQL engine, AST/JSON schema, unit tests) filters truth $\rightarrow$ hard-negative OOD boundary synthesis $\rightarrow$ LoRA + Conformal Calibration $\rightarrow$ Eval-Before-Gossip gate. |
+| **4. Attribution, Shared-Entity Payouts & Anti-Whale Cap** | Basic 90/10 per-task escrow receipt | Need continuous adapter-author royalties, shared-entity accounting, and protection against mega-cluster dilution | **70/10/10/10 Split + Anti-Whale Concave Cap:** Per-operator daily rewards follow $\min(\text{Cap}, \text{Units}^{0.75} \cdot \text{Scarcity})$. Datacenter compute above $\text{Cap}$ is accepted as a **Philanthropic Overflow Grant** whose value flows 100% into the Community Dividend & Open-Science Pool. |
+| **5. Lightweight Optional GUI Hub** | CLI (`hermes hacmdn`) & Slash (`/hacmdn`) only | Users want a visual hub for live compute status, inference contributed, ideas pitched, and accumulated earnings | **Tri-Surface Optional GUI:** Native Hermes Desktop pane & statusbar chip (`desktop/plugin.js`), Hermes Dashboard tab (`dashboard/`), and standalone local web hub (`hermes hacmdn gui`). |
+
+---
+
+## 3. Critical Technologies, Languages & Prior-Art Scaffolding
+
+1. **Core Plugin, Coordinator & Training Stack (`Python 3.11+`):**
+   - `transformers`, `peft`, `safetensors`, `huggingface_hub`, `gradio` (ZeroGPU Space & MCP server), `sqlite3` (WAL mode local ledger).
+2. **Edge & Low-Resource Serving Engines (`C++ / Rust / Apple Metal` via CLI/Bindings):**
+   - **`llama.cpp` (`GGUF` + LoRA hot-swapping):** Enables `Qwen3-0.6B-Q4_K_M` (`~390 MB`) to run at `90–180 tok/s` on ordinary consumer CPUs, Steam Decks, and mini-PCs with zero discrete GPU required.
+   - **`MLX` (Apple Silicon):** Native unified-memory serving for Mac contributors.
+   - **`vLLM` / `SGLang`:** High-throughput continuous batching + multi-LoRA serving (`--enable-lora`) for community Organizer nodes with 8–24 GB GPUs.
+3. **P2P Networking & NAT Traversal (`Rust / Go / Python`):**
+   - **Iroh (`n0-computer/iroh`):** Modern Rust QUIC P2P networking with built-in hole-punching, relay fallback (same philosophy as Tailscale DERP), and content-addressed blobs for gossiping LoRA adapters (`~20 MB` each) peer-to-peer.
+   - **Hivemind / Petals (`learning-at-home/hivemind`):** Proven Kademlia DHT with expiring `ServerInfo` TTL announcements and pledged bounty audits.
+4. **Weight Merging & Compositional Flywheel:**
+   - **`mergekit` (`arcee-ai/mergekit`):** Quarterly DARE/TIES merges of same-domain `Qwen/Qwen3-0.6B` adapters into a single zero-overhead domain checkpoint.
+5. **Micro-Settlement & Shared-Entity Accounting:**
+   - **Signed Merkle Receipt Ledger (Phase 1)** $\rightarrow$ **L402 Lightning Network Sats Streaming (`ldk-node`, Phase 2)** + **Cooperative Revenue-Share / Token Dividend Pool (Phase 3)**.
+
+---
+
+## 4. Phased Master Plan & Checklist
+
+### Phase 1: Thesis, Spec v0.1/v0.2 & Repository Foundation (COMPLETED)
 - [x] Archive original thesis (`01-concept-thesis.md`), feasibility report (`02-feasibility-report-2026-11-07.md`), and Spec v0.1 (`03-spec-v0.1.md`).
-- [x] Author Spec v0.2 Extensions (`04-spec-v0.2-extensions.md`): Neighborhood Connector, Bidding Protocol, 6-Tier Progressive Escalation, ZeroGPU Buffer, and Governance/Idle Pool.
-- [x] Initialize Apache-2.0 license (`Copyright 2026 Jonathan Korstad`), `MASTER_PLAN.md`, and `AGENTS.md`.
+- [x] Author Spec v0.2 Extensions (`04-spec-v0.2-extensions.md`): Model #1 Neighborhood Connector, Confidence-Weighted & Proxy Bidding, 6-Tier Escalation Ladder, ZeroGPU Buffer, and Governance/Idle Pool.
+- [x] Author Mesh, Anti-Whale Economics & GUI Architecture Spec (`05-mesh-economics-and-gui-architecture.md`).
+- [x] Apache-2.0 `LICENSE` (`Copyright 2026 Jonathan Korstad`), `MASTER_PLAN.md`, and `AGENTS.md`.
 
-### Phase 2: Hermes Agent Plugin (`hacmdn`)
-- [x] Native Manifest v2 (`plugin.yaml`) + `register(ctx)` entrypoint (`__init__.py`).
-- [x] Core Decentralized Network Engine (`network.py`) backed by profile-scoped SQLite (`plugins.plugin_storage.plugin_db("hacmdn")`):
-  - Capability Descriptor Registry with TTL expiration & diversity fingerprint penalty
-  - Confidence-Weighted Bidding & Downstream Proxy Bidding (`bid_on_task`)
-  - Semantic-Entropy Confidence & Conformal Abstention Evaluator
-  - 6-Tier Progressive Upstream Escalation Router (`route_query`)
-  - Eval-Before-Gossip (`verify_and_publish_descriptor`)
-  - JIT Fine-Tuning Bounty Flywheel + Community Governance Votes + Idle Open-Science/Local-Business Pool
-  - Escrowed Per-Task Settlement + 5% Sampling Audits + 24h Challenge Slashing
-- [x] 5 LLM Tools (`schemas.py`, `tools.py`):
-  - `hacmdn_route_query`
-  - `hacmdn_publish_specialist`
-  - `hacmdn_bid_task`
-  - `hacmdn_bounty_flywheel`
-  - `hacmdn_network_status`
+### Phase 2: Core Hermes Agent Plugin (`hacmdn` v0.2 → v0.3) (COMPLETED)
+- [x] Manifest v2 (`plugin.yaml`) + `register(ctx)` entrypoint (`__init__.py`).
+- [x] Core Decentralized Network Engine (`network.py`) backed by profile-scoped SQLite:
+  - [x] Capability Descriptor Registry with TTL expiration & diversity fingerprint penalty
+  - [x] Confidence-Weighted Bidding & Downstream Proxy Bidding (`run_bidding_round`)
+  - [x] Semantic-Entropy Confidence & Conformal Abstention Evaluator
+  - [x] 6-Tier Progressive Upstream Escalation Router (`route_query`)
+  - [x] Eval-Before-Gossip (`publish`)
+  - [x] **v0.3 Upgrade:** Anti-Whale Capped **70/10/10/10 Attribution & Shared-Entity Payout Ledger** with Datacenter Overflow Grant pool
+  - [x] **v0.3 Upgrade:** **4-Pool Concurrent Work Allocator** (`interactive-micro`, `parallel-batch`, `idle-open-science`, `jit-finetune`) + **Hardware/Game-Guard Worker Profiler**
+  - [x] **v0.3 Upgrade:** **Community Idea Pitching & Contributor Portfolio Tracker** (`pitch_idea`, `configure_worker`, `contributor_hub`)
+- [x] 7 LLM Tools (`schemas.py`, `tools.py`):
+  - [x] `hacmdn_route_query`
+  - [x] `hacmdn_publish_specialist`
+  - [x] `hacmdn_bid_task`
+  - [x] `hacmdn_bounty_flywheel`
+  - [x] `hacmdn_network_status`
+  - [x] `hacmdn_worker_pool` (Hardware/Game-Guard profiling, gap auto-loading, multi-pool work execution)
+  - [x] `hacmdn_contributor_hub` (Attribution, anti-whale earnings breakdown, pitching community ideas, GUI launcher)
 - [x] In-Session Slash Command (`/hacmdn`) & CLI Subcommand (`hermes hacmdn ...`).
 - [x] Bundled Skill (`skills/hacmdn-network/SKILL.md`).
-- [x] Pass `hermes plugins doctor`, `hermes plugins validate`, and `pytest` suite.
 
-### Phase 3: De-Risking Pilot — Fine-Tuning 3 Real `Qwen/Qwen3-0.6B` Micro-Models on RTX 4070 Ti
-- [x] Fine-tune **Model #1**: `jkorstad/hacmdn-qwen3-0.6b-neighborhood-connector-v1` (Neighborhood Connector, domain triage, downstream proxy bidder, OOD abstainer).
-- [x] Fine-tune **Model #2**: `jkorstad/hacmdn-qwen3-0.6b-sql-window-rewriter-v1` (PostgreSQL 14+ CTE-to-Window query rewriter + brutal-honesty OOD abstainer).
-- [x] Fine-tune **Model #3**: `jkorstad/hacmdn-qwen3-0.6b-json-rpc-tool-caller-v1` (Strict JSON-RPC / micro-function synthesizer + brutal-honesty OOD abstainer).
-- [x] Execute §5/§11 Pilot Acceptance Benchmark (`training/run_pilot_experiment.py`) and record verified metrics in `data/pilot_eval_results.json` and `docs/PILOT_PROOF_OF_WORK.md`.
+### Phase 3: De-Risking Pilot — Fine-Tuning 3 Real `Qwen/Qwen3-0.6B` Micro-Models (COMPLETED)
+- [x] Fine-tune **Model #1**: `jkorstad/hacmdn-qwen3-0.6b-neighborhood-connector-v1` (`100%` held-out score vs `30%` base, `100%` OOD abstention, `AUC = 1.0000`).
+- [x] Fine-tune **Model #2**: `jkorstad/hacmdn-qwen3-0.6b-sql-window-rewriter-v1` (`100%` held-out score vs `0%` base, `100%` OOD abstention, `AUC = 1.0000`).
+- [x] Fine-tune **Model #3**: `jkorstad/hacmdn-qwen3-0.6b-json-rpc-tool-caller-v1` (`100%` held-out score vs `0%` base, `100%` OOD abstention, `AUC = 1.0000`).
+- [x] Verify spare-compute training while primary GPU workload (*Cyberpunk 2077*) is active.
 
-### Phase 4: Hugging Face Community Collection & ZeroGPU Buffer Space
-- [x] Upload all 3 fine-tuned LoRA adapters + Capability Descriptors + Eval Reports to Hugging Face (`jkorstad/hacmdn-qwen3-0.6b-*`).
-- [x] Build, verify, and deploy the Gradio 6 ZeroGPU Space `jkorstad/hacmdn-community-buffer`.
-- [x] Create and populate the Hugging Face Collection unifying the models and Space.
+### Phase 4: Hugging Face Community Collection & ZeroGPU Buffer Space (COMPLETED)
+- [x] Publish all 3 fine-tuned LoRA adapters + Capability Descriptors + Eval Reports to Hugging Face (`jkorstad/hacmdn-qwen3-0.6b-*`).
+- [x] Deploy Gradio 6 ZeroGPU Space `jkorstad/hacmdn-community-buffer`.
+- [x] Create and populate canonical Hugging Face Collection (`jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5`).
 
-### Phase 5: Public GitHub Release & Local Hermes Enablement
-- [x] Publish `https://github.com/Jpalmer95/hacmdn-net`.
-- [x] Install and enable `hacmdn` in `~/.hermes/plugins/hacmdn`.
+### Phase 5: Optional Lightweight GUI Hub (Tri-Surface: Desktop + Dashboard + Local Web Hub) (COMPLETED)
+- [x] **Hermes Web Dashboard Extension (`dashboard/`):** `manifest.json`, `plugin_api.py` (`/api/plugins/hacmdn/hub`, `/api/plugins/hacmdn/action`), and `dist/index.js` interactive hub tab.
+- [x] **Hermes Desktop Native Plugin (`desktop/plugin.js`):** `@hermes/plugin-sdk` right-docked **HACMDN Hub** pane + live **Status Bar Compute & Earnings Chip**.
+- [x] **Standalone Local Web Hub (`gui.py` / `hermes hacmdn gui`) & Inline Chat Preview Widget:** Zero-dependency local HTTP dashboard + live chat preview showing current compute allocation, Game-Guard status, inference contributed, ideas pitched, and 70/10/10/10 anti-whale earnings.
+
+### Phase 6: Global P2P Mesh Transport, Autonomous Distillation Factory & L402 Settlement (Next Milestones — v0.4 → v1.0)
+- [ ] **v0.4 — Outbound Rendezvous Work-Queue & `llama.cpp` GGUF Worker Daemon:** Connect distributed home nodes over outbound WSS to the HF Space / FastAPI Rendezvous coordinator with automatic GGUF + LoRA hot-swapping.
+- [ ] **v0.5 — Execution-Verified Synthetic Distillation Factory (`training/distill_specialist.py`):** Automated teacher generation (`Hermes-4-14B` / `hf jobs uv`) + deterministic execution verifiers (SQLite/Postgres/DuckDB/Python AST) + hard-negative boundary abstention DPO.
+- [ ] **v0.6 — Iroh QUIC P2P Overlay & Peer-to-Peer LoRA Blob Gossip:** Direct NAT hole-punching between neighborhood peers so traffic bypasses the Rendezvous relay whenever direct QUIC paths succeed.
+- [ ] **v1.0 — L402 Lightning & Cooperative Dividend Settlement + Hermes Plugin Catalog PR:** Connect the anti-whale attribution ledger to live L402 Lightning micropayments (`ldk-node`) and submit `plugin-catalog/hacmdn.yaml` to `NousResearch/hermes-agent`.

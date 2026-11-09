@@ -19,6 +19,8 @@ _TOOLS = (
     ("hacmdn_bid_task",           schemas.HACMDN_BID_TASK,           tools.hacmdn_bid_task,           "⚖️"),
     ("hacmdn_bounty_flywheel",    schemas.HACMDN_BOUNTY_FLYWHEEL,    tools.hacmdn_bounty_flywheel,    "🎯"),
     ("hacmdn_network_status",     schemas.HACMDN_NETWORK_STATUS,     tools.hacmdn_network_status,     "🗺️"),
+    ("hacmdn_worker_pool",        schemas.HACMDN_WORKER_POOL,        tools.hacmdn_worker_pool,        "⚙️"),
+    ("hacmdn_contributor_hub",    schemas.HACMDN_CONTRIBUTOR_HUB,    tools.hacmdn_contributor_hub,    "💎"),
 )
 
 

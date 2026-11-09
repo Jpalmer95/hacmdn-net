@@ -1,0 +1,13 @@
+{
+  "name": "hacmdn",
+  "label": "HACMDN-Net",
+  "description": "Decentralized Micro-Specialist Mesh, Contributor Earnings & Anti-Whale Ledger Hub",
+  "icon": "Globe",
+  "version": "0.3.0",
+  "tab": {
+    "path": "/hacmdn",
+    "position": "after:skills"
+  },
+  "entry": "dist/index.js",
+  "api": "plugin_api.py"
+}

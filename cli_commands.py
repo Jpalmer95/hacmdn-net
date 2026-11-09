@@ -49,8 +49,11 @@ def handle_slash_command(raw_args: str, **kwargs: Any) -> str:
 
     if sub in ("help", "-h", "--help"):
         return (
-            "Usage: /hacmdn [status | route <query> | bid <query> | bounties | vote <topic> | idle]\n"
+            "Usage: /hacmdn [status | hub | pools | pitch <idea> | route <query> | bid <query> | bounties | vote <topic> | idle]\n"
             "  /hacmdn status          Show live neighborhoods, specialists, and ZeroGPU buffer\n"
+            "  /hacmdn hub             Show your Contributor Hub: 70/10/10/10 earnings, Anti-Whale cap, & pitched ideas\n"
+            "  /hacmdn pools           Profile hardware (Game-Guard) & show 4 work pools + Shortage Scores\n"
+            "  /hacmdn pitch <idea>    Pitch a new community directive or niche specialist idea\n"
             "  /hacmdn route <query>   Route a task through the 6-tier escalation ladder\n"
             "  /hacmdn bid <query>     Run confidence-weighted bidding across specialists\n"
             "  /hacmdn bounties        List open JIT fine-tuning bounties & abstention gaps\n"
@@ -60,6 +63,20 @@ def handle_slash_command(raw_args: str, **kwargs: Any) -> str:
 
     if sub == "status":
         return format_status_summary(net.status(include_descriptors=False))
+
+    if sub in ("hub", "gui"):
+        return json.dumps(net.manage_contributor_hub({"action": "export_gui_widget"}), indent=2)
+
+    if sub == "pools":
+        return json.dumps(net.manage_worker_pool({"action": "profile_and_recommend"}), indent=2)
+
+    if sub == "pitch":
+        if not rest:
+            return "Usage: /hacmdn pitch <idea title>"
+        return json.dumps(
+            net.manage_contributor_hub({"action": "pitch_idea", "idea_title": rest, "idea_description": rest}),
+            indent=2,
+        )
 
     if sub == "route":
         if not rest:
@@ -106,6 +123,13 @@ def setup_cli_parser(subparser: Any) -> None:
     p_sim = subs.add_parser("simulate", help="Run a multi-query neighborhood routing & abstention simulation")
     p_sim.add_argument("--json", action="store_true", help="Output JSON report")
 
+    subs.add_parser("hub", help="Show Contributor & Node Operator Hub (earnings, Anti-Whale cap, pools, ideas)")
+    subs.add_parser("pools", help="Profile local hardware (Game-Guard) and show Shortage Scores & 4 work pools")
+
+    p_gui = subs.add_parser("gui", help="Export or serve the lightweight HACMDN-Net Contributor Hub GUI")
+    p_gui.add_argument("--serve", action="store_true", help="Start local HTTP server on 127.0.0.1:8765")
+    p_gui.add_argument("--port", type=int, default=8765, help="Port for --serve (default 8765)")
+
     subparser.set_defaults(func=handle_cli_command)
 
 
@@ -141,6 +165,28 @@ def handle_cli_command(args: Any) -> None:
     if sub == "bounties":
         res = net.manage_flywheel({"action": "list_bounties"})
         print(json.dumps(res, indent=2))
+        return
+
+    if sub == "hub":
+        res = net.manage_contributor_hub({"action": "get_hub_snapshot"})
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "pools":
+        res = net.manage_worker_pool({"action": "profile_and_recommend"})
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "gui":
+        res = net.manage_contributor_hub({"action": "export_gui_widget"})
+        if getattr(args, "serve", False):
+            try:
+                from .gui import serve_local_gui
+            except ImportError:
+                from gui import serve_local_gui  # type: ignore[no-redef]
+            serve_local_gui(port=int(getattr(args, "port", 8765)))
+            return
+        print(json.dumps({"gui_widget_html_path": res.get("gui_widget_html_path"), "operator_id": res.get("operator_id"), "earnings_summary": res.get("earnings_summary")}, indent=2))
         return
 
     if sub == "simulate":

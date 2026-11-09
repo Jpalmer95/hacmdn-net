@@ -92,3 +92,23 @@ def hacmdn_network_status(args: dict[str, Any], **kwargs: Any) -> str:
         return json.dumps(result, indent=2)
     except Exception as exc:
         return json.dumps({"error": f"hacmdn_network_status failed: {exc}"})
+
+
+def hacmdn_worker_pool(args: dict[str, Any], **kwargs: Any) -> str:
+    """Manage hardware profiling, Shortage-Score specialist auto-loading, and parallel batch execution."""
+    try:
+        net = get_network()
+        result = net.manage_worker_pool(args)
+        return json.dumps(result, indent=2)
+    except Exception as exc:
+        return json.dumps({"error": f"hacmdn_worker_pool failed: {exc}"})
+
+
+def hacmdn_contributor_hub(args: dict[str, Any], **kwargs: Any) -> str:
+    """Access the Contributor & Node Operator Hub: 70/10/10/10 attribution, Anti-Whale cap, idea pitching, and GUI."""
+    try:
+        net = get_network()
+        result = net.manage_contributor_hub(args)
+        return json.dumps(result, indent=2)
+    except Exception as exc:
+        return json.dumps({"error": f"hacmdn_contributor_hub failed: {exc}"})

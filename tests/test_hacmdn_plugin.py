@@ -54,6 +54,8 @@ def test_plugin_registration():
         "hacmdn_bid_task",
         "hacmdn_bounty_flywheel",
         "hacmdn_network_status",
+        "hacmdn_worker_pool",
+        "hacmdn_contributor_hub",
     }
     assert "hacmdn" in ctx.commands
     assert "hacmdn" in ctx.cli_commands
@@ -259,3 +261,56 @@ def test_governance_vote_and_idle_pool_and_slash_command():
     slash_out = cli_commands.handle_slash_command("status")
     assert "HACMDN-Net" in slash_out
     assert "qwen3-0.6b-neighborhood-connector-v1" in slash_out
+
+
+def test_worker_pool_and_anti_whale_contributor_hub(tmp_path: Path):
+    # 1. Profile hardware & recommend specialist by Shortage Score
+    prof = json.loads(tools.hacmdn_worker_pool({"action": "profile_and_recommend"}))
+    assert "hardware_profile" in prof
+    assert len(prof["shortage_rankings"]) >= 3
+
+    # 2. Run parallel batch across mesh work pool
+    batch = json.loads(
+        tools.hacmdn_worker_pool(
+            {
+                "action": "run_parallel_batch",
+                "batch_queries": [
+                    "Rewrite PostgreSQL CTE into ROW_NUMBER() OVER window function",
+                    "Synthesize JSON-RPC 2.0 tool call for calculate_shipping",
+                ],
+            }
+        )
+    )
+    assert batch["subtasks_count"] == 2
+    assert batch["results"][0]["status"] == "ok"
+
+    # 3. Pitch a new community idea
+    idea = json.loads(
+        tools.hacmdn_contributor_hub(
+            {
+                "action": "pitch_idea",
+                "idea_title": "Local Farm-to-Table Supply Chain Schema Normalizer",
+                "idea_category": "local-business-aid",
+            }
+        )
+    )
+    assert idea["status"] == "community_voting"
+    assert idea["initial_vote_weight"] > 0
+
+    # 4. Simulate Datacenter Overflow (120.0 raw credits -> capped at 50.0, 70.0 overflow to Community Pool)
+    overflow = json.loads(
+        tools.hacmdn_contributor_hub(
+            {
+                "action": "simulate_datacenter_overflow",
+                "raw_datacenter_credits": 120.0,
+            }
+        )
+    )
+    assert overflow["datacenter_personal_payout"] == 50.0
+    assert overflow["philanthropic_overflow_to_community_pool"] == 70.0
+    assert overflow["small_operator_dividend_boost"]["dividend_added_credits"] == 35.0
+
+    # 5. Export GUI Hub HTML widget
+    hub = json.loads(tools.hacmdn_contributor_hub({"action": "export_gui_widget"}))
+    assert Path(hub["gui_widget_html_path"]).is_file()
+    assert hub["earnings_summary"]["total_accumulated_credits"] > 35.0

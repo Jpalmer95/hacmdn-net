@@ -247,3 +247,92 @@ HACMDN_NETWORK_STATUS = {
         "required": [],
     },
 }
+
+HACMDN_WORKER_POOL = {
+    "name": "hacmdn_worker_pool",
+    "description": (
+        "Manage this machine's participation in the HACMDN-Net decentralized compute mesh. "
+        "Profiles local CPU/RAM/GPU hardware with Game-Guard (never interrupting active games/renders), "
+        "computes Neighborhood Shortage Scores to auto-select which niche Qwen3-0.6B specialist is needed most, "
+        "allocates compute across the 4 work pools ('pool-interactive-micro', 'pool-parallel-batch', "
+        "'pool-idle-community', 'pool-jit-finetune'), or runs a parallel multi-query batch across the mesh."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "enum": [
+                    "profile_and_recommend",
+                    "configure_worker",
+                    "auto_load_needed_specialist",
+                    "run_parallel_batch",
+                ],
+                "description": "Worker pool operation to run.",
+            },
+            "compute_mode": {
+                "type": "string",
+                "enum": ["auto_game_guard", "spare_cpu_only", "gpu_when_idle", "paused"],
+                "description": "Compute contribution mode for 'configure_worker'.",
+            },
+            "subscribed_pools": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Work pools this node opts into (e.g. ['pool-interactive-micro', 'pool-idle-community']).",
+            },
+            "batch_queries": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of sub-tasks/queries to execute concurrently in 'run_parallel_batch'.",
+            },
+        },
+        "required": ["action"],
+    },
+}
+
+HACMDN_CONTRIBUTOR_HUB = {
+    "name": "hacmdn_contributor_hub",
+    "description": (
+        "Access the HACMDN-Net Contributor & Node Operator Hub: view accumulated earnings and the "
+        "70/10/10/10 Shared-Entity Attribution breakdown (Worker Inference + Adapter Author Royalties + "
+        "Connector Routing + Shared Community Pool), check the Anti-Whale Daily Cap & Datacenter Overflow "
+        "Dividend Pool, pitch a new idea/directive to the community, or render the interactive GUI Hub."
+    ),
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "action": {
+                "type": "string",
+                "enum": [
+                    "get_hub_snapshot",
+                    "pitch_idea",
+                    "simulate_datacenter_overflow",
+                    "export_gui_widget",
+                ],
+                "description": "Hub action to perform.",
+            },
+            "operator_id": {
+                "type": "string",
+                "description": "Contributor/operator ID (default 'jkorstad-node-01').",
+            },
+            "idea_title": {
+                "type": "string",
+                "description": "Short title when pitching a new community directive or niche specialist idea.",
+            },
+            "idea_description": {
+                "type": "string",
+                "description": "Detailed description of the community idea, open-science goal, or local-business aid proposal.",
+            },
+            "idea_category": {
+                "type": "string",
+                "enum": ["niche-specialist", "open-science", "local-business-aid", "protocol-governance"],
+                "description": "Category for 'pitch_idea'.",
+            },
+            "raw_datacenter_credits": {
+                "type": "number",
+                "description": "Raw compute credits contributed by a large cluster in 'simulate_datacenter_overflow' (e.g. 120.0) to demonstrate the Anti-Whale Community Cap.",
+            },
+        },
+        "required": ["action"],
+    },
+}

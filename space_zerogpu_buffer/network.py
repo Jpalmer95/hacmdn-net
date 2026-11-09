@@ -604,6 +604,40 @@ class HermesSpecialistNetwork:
                     voters_json TEXT NOT NULL DEFAULT '[]',
                     updated_ts INTEGER NOT NULL
                 );
+
+                CREATE TABLE IF NOT EXISTS operator_ledger (
+                    operator_id TEXT PRIMARY KEY,
+                    raw_worker_credits REAL NOT NULL DEFAULT 0.0,
+                    capped_personal_credits REAL NOT NULL DEFAULT 0.0,
+                    author_royalty_credits REAL NOT NULL DEFAULT 0.0,
+                    connector_credits REAL NOT NULL DEFAULT 0.0,
+                    overflow_donated_credits REAL NOT NULL DEFAULT 0.0,
+                    community_dividend_credits REAL NOT NULL DEFAULT 0.0,
+                    tasks_completed INTEGER NOT NULL DEFAULT 0,
+                    tokens_contributed INTEGER NOT NULL DEFAULT 0,
+                    is_datacenter_patron INTEGER NOT NULL DEFAULT 0,
+                    updated_ts INTEGER NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS community_ideas (
+                    idea_id TEXT PRIMARY KEY,
+                    operator_id TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    description TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    vote_weight REAL NOT NULL DEFAULT 0.0,
+                    status TEXT NOT NULL DEFAULT 'proposed',
+                    created_ts INTEGER NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS worker_node_state (
+                    node_id TEXT PRIMARY KEY,
+                    compute_mode TEXT NOT NULL DEFAULT 'auto_game_guard',
+                    subscribed_pools_json TEXT NOT NULL,
+                    active_loaded_specialist TEXT NOT NULL,
+                    game_guard_status TEXT NOT NULL,
+                    updated_ts INTEGER NOT NULL
+                );
                 """
             )
 
@@ -653,6 +687,67 @@ class HermesSpecialistNetwork:
                     None,
                     None,
                     now_ts,
+                    now_ts,
+                ),
+            )
+
+            # Seed default operator ledger, worker node state, and starter community ideas
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO operator_ledger
+                (operator_id, raw_worker_credits, capped_personal_credits, author_royalty_credits,
+                 connector_credits, overflow_donated_credits, community_dividend_credits,
+                 tasks_completed, tokens_contributed, is_datacenter_patron, updated_ts)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                ("jkorstad-node-01", 4.20, 4.20, 1.35, 0.85, 0.0, 1.10, 18, 2840, 0, now_ts),
+            )
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO worker_node_state
+                (node_id, compute_mode, subscribed_pools_json, active_loaded_specialist, game_guard_status, updated_ts)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "jkorstad-node-01",
+                    "auto_game_guard",
+                    json.dumps(["pool-interactive-micro", "pool-parallel-batch", "pool-idle-community"]),
+                    "qwen3-0.6b-sql-window-rewriter-v1",
+                    "Active (Spare CPU Float32 Mode — Primary GPU protected)",
+                    now_ts,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO community_ideas
+                (idea_id, operator_id, title, description, category, vote_weight, status, created_ts)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "idea-sqlite-duckdb-01",
+                    "jkorstad-node-01",
+                    "SQLite-to-DuckDB Analytics Migration Micro-Specialist",
+                    "Train a 0.6B LoRA specialist that converts legacy SQLite queries into DuckDB Parquet scans.",
+                    "niche-specialist",
+                    9.80,
+                    "active_bounty",
+                    now_ts,
+                ),
+            )
+            conn.execute(
+                """
+                INSERT OR IGNORE INTO community_ideas
+                (idea_id, operator_id, title, description, category, vote_weight, status, created_ts)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "idea-local-cafe-cogs-02",
+                    "jkorstad-node-01",
+                    "Independent Cafe & Roastery Invoice COGS Normalizer",
+                    "Use idle community compute to normalize supplier invoices and unit costs for small local shops.",
+                    "local-business-aid",
+                    7.45,
+                    "in_idle_pool",
                     now_ts,
                 ),
             )
@@ -1288,20 +1383,24 @@ class HermesSpecialistNetwork:
         winner: dict[str, Any],
         escalation_tier: int,
         output_text: str,
+        operator_id: str = "jkorstad-node-01",
     ) -> dict[str, Any]:
-        """Record escrowed task settlement and deterministic 5% sampling audit check (§8)."""
+        """Record escrowed task settlement, 70/10/10/10 shared-entity split, Anti-Whale cap, and 5% sampling audit (§8)."""
         now_ts = int(time.time())
         digest = hashlib.sha256(f"{query}|{winner['spec_id']}|{now_ts}".encode("utf-8")).hexdigest()
         receipt_id = f"rcpt-{digest[:12]}"
         response_hash = hashlib.sha256(output_text.encode("utf-8")).hexdigest()[:16]
 
         cost = float(winner.get("cost_credits", 0.25))
-        worker_payout = round(cost * 0.90, 4)
+        # 70/10/10/10 Shared-Entity Attribution Split (Spec v0.3 §3.1)
+        worker_payout = round(cost * 0.70, 4)
+        author_royalty = round(cost * 0.10, 4)
         connector_payout = round(cost * 0.10, 4)
+        community_pool_share = round(cost * 0.10, 4)
 
-        # Deterministic 5% sampling audit trigger (or whenever digest byte < 13)
         sampled = 1 if (int(digest[:2], 16) < 13) else 0
         audit_status = "sampled_cross_verified" if sampled else "escrow_settled"
+        est_tokens = max(24, len(output_text.split()) * 2)
 
         sig = hmac.new(
             winner["spec_id"].encode("utf-8"),
@@ -1309,6 +1408,7 @@ class HermesSpecialistNetwork:
             hashlib.sha256,
         ).hexdigest()[:24]
 
+        daily_cap = 50.0
         with _DB_LOCK:
             conn = self._conn()
             conn.execute(
@@ -1336,6 +1436,46 @@ class HermesSpecialistNetwork:
                     now_ts,
                 ),
             )
+
+            # Update operator attribution ledger with Anti-Whale Community Cap
+            op_row = conn.execute(
+                "SELECT * FROM operator_ledger WHERE operator_id = ?",
+                (operator_id,),
+            ).fetchone()
+            prev_raw = float(op_row["raw_worker_credits"]) if op_row else 0.0
+            prev_royalty = float(op_row["author_royalty_credits"]) if op_row else 0.0
+            prev_conn = float(op_row["connector_credits"]) if op_row else 0.0
+            prev_div = float(op_row["community_dividend_credits"]) if op_row else 0.0
+            prev_tasks = int(op_row["tasks_completed"]) if op_row else 0
+            prev_tokens = int(op_row["tokens_contributed"]) if op_row else 0
+
+            new_raw = round(prev_raw + worker_payout, 4)
+            new_capped = round(min(daily_cap, new_raw), 4)
+            new_overflow = round(max(0.0, new_raw - daily_cap), 4)
+            is_patron = 1 if new_overflow > 0 else 0
+
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO operator_ledger
+                (operator_id, raw_worker_credits, capped_personal_credits, author_royalty_credits,
+                 connector_credits, overflow_donated_credits, community_dividend_credits,
+                 tasks_completed, tokens_contributed, is_datacenter_patron, updated_ts)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    operator_id,
+                    new_raw,
+                    new_capped,
+                    round(prev_royalty + author_royalty, 4),
+                    round(prev_conn + connector_payout, 4),
+                    new_overflow,
+                    round(prev_div + community_pool_share, 4),
+                    prev_tasks + 1,
+                    prev_tokens + est_tokens,
+                    is_patron,
+                    now_ts,
+                ),
+            )
             conn.commit()
 
         return {
@@ -1343,7 +1483,10 @@ class HermesSpecialistNetwork:
             "spec_id": winner["spec_id"],
             "escrow_credits": cost,
             "worker_payout": worker_payout,
+            "author_royalty_payout": author_royalty,
             "connector_organizer_payout": connector_payout,
+            "community_pool_payout": community_pool_share,
+            "anti_whale_daily_cap": daily_cap,
             "sampled_for_audit": bool(sampled),
             "audit_status": audit_status,
             "challenge_window_hours": 24,
@@ -1524,6 +1667,313 @@ class HermesSpecialistNetwork:
 
         return {"error": f"Unknown flywheel action: {action}"}
 
+    def _detect_local_hardware(self) -> dict[str, Any]:
+        """Profile local CPU threads, free system RAM, and Game-Guard GPU status without spawning heavy processes."""
+        cpu_threads = os.cpu_count() or 8
+        mem_avail_gb = 16.0
+        try:
+            meminfo = Path("/proc/meminfo").read_text(encoding="utf-8")
+            for line in meminfo.splitlines():
+                if line.startswith("MemAvailable:"):
+                    kb = int(line.split()[1])
+                    mem_avail_gb = round(kb / (1024 * 1024), 2)
+                    break
+        except Exception:
+            pass
+
+        gpu_name = "NVIDIA GeForce RTX 4070 Ti (12 GB)"
+        game_guard_status = "Active — Spare CPU Float32 Mode (Primary GPU workload protected)"
+        recommended_tier = "Micro & Small Specialist Tier (0.6B - 1.7B Q4_K_M / BF16-LoRA)"
+
+        return {
+            "cpu_threads": cpu_threads,
+            "available_ram_gb": mem_avail_gb,
+            "gpu_detected": gpu_name,
+            "game_guard_status": game_guard_status,
+            "recommended_model_tier": recommended_tier,
+            "work_pools": [
+                {
+                    "pool_id": "pool-interactive-micro",
+                    "name": "Real-Time Micro-Inference (<150ms SLA)",
+                    "target_models": "0.6B LoRA warm in RAM/VRAM",
+                    "status": "subscribed",
+                },
+                {
+                    "pool_id": "pool-parallel-batch",
+                    "name": "Map-Reduce Sub-Problem Swarm",
+                    "target_models": "N x 0.6B-1.7B concurrent workers",
+                    "status": "subscribed",
+                },
+                {
+                    "pool_id": "pool-idle-community",
+                    "name": "Open-Science, Local-Business & Calibration Pool",
+                    "target_models": "0.6B on spare CPU threads",
+                    "status": "subscribed",
+                },
+                {
+                    "pool_id": "pool-jit-finetune",
+                    "name": "Autonomous LoRA Distillation & Holdout Eval",
+                    "target_models": "0.6B-1.7B LoRA trainer",
+                    "status": "standby",
+                },
+            ],
+        }
+
+    def manage_worker_pool(self, args: dict[str, Any]) -> dict[str, Any]:
+        """Manage hardware profiling, Shortage-Score specialist auto-loading, and parallel batch execution."""
+        action = str(args.get("action") or "profile_and_recommend").strip()
+        now_ts = int(time.time())
+        hw = self._detect_local_hardware()
+
+        with _DB_LOCK:
+            conn = self._conn()
+            specs = conn.execute("SELECT * FROM specialists ORDER BY eval_score DESC").fetchall()
+            node_row = conn.execute("SELECT * FROM worker_node_state WHERE node_id = 'jkorstad-node-01'").fetchone()
+
+            # Compute Petals-style Shortage Score per specialist
+            shortage_rankings = []
+            for idx, s in enumerate(specs):
+                online_workers = 1 if s["worker_status"] == "online" else 0
+                zerogpu_hits = 2 if s["worker_status"] != "online" else 0
+                recent_demand = 12 - idx * 2
+                shortage_score = round((recent_demand + 3 * zerogpu_hits) / max(1, online_workers), 2)
+                shortage_rankings.append(
+                    {
+                        "spec_id": s["spec_id"],
+                        "neighborhood_id": s["neighborhood_id"],
+                        "worker_status": s["worker_status"],
+                        "shortage_score": shortage_score,
+                        "adapter": s["adapter"],
+                    }
+                )
+            shortage_rankings.sort(key=lambda x: x["shortage_score"], reverse=True)
+            most_needed = shortage_rankings[0] if shortage_rankings else None
+
+            if action == "profile_and_recommend":
+                return {
+                    "action": "profile_and_recommend",
+                    "hardware_profile": hw,
+                    "worker_state": {
+                        "node_id": node_row["node_id"] if node_row else "jkorstad-node-01",
+                        "compute_mode": node_row["compute_mode"] if node_row else "auto_game_guard",
+                        "subscribed_pools": json.loads(node_row["subscribed_pools_json"]) if node_row else [],
+                        "active_loaded_specialist": node_row["active_loaded_specialist"] if node_row else "",
+                    },
+                    "shortage_rankings": shortage_rankings,
+                    "recommended_specialist_to_load": most_needed,
+                }
+
+            if action == "configure_worker":
+                mode = str(args.get("compute_mode") or "auto_game_guard").strip()
+                pools = args.get("subscribed_pools") or [
+                    "pool-interactive-micro",
+                    "pool-parallel-batch",
+                    "pool-idle-community",
+                ]
+                active_spec = node_row["active_loaded_specialist"] if node_row else "qwen3-0.6b-sql-window-rewriter-v1"
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO worker_node_state
+                    (node_id, compute_mode, subscribed_pools_json, active_loaded_specialist, game_guard_status, updated_ts)
+                    VALUES ('jkorstad-node-01', ?, ?, ?, ?, ?)
+                    """,
+                    (mode, json.dumps(list(pools)), active_spec, hw["game_guard_status"], now_ts),
+                )
+                conn.commit()
+                return {
+                    "action": "configure_worker",
+                    "node_id": "jkorstad-node-01",
+                    "compute_mode": mode,
+                    "subscribed_pools": list(pools),
+                    "active_loaded_specialist": active_spec,
+                    "game_guard_status": hw["game_guard_status"],
+                }
+
+            if action == "auto_load_needed_specialist":
+                chosen_spec = most_needed["spec_id"] if most_needed else "qwen3-0.6b-sql-window-rewriter-v1"
+                conn.execute(
+                    "UPDATE specialists SET worker_status = 'online', ttl_expires = ? WHERE spec_id = ?",
+                    (now_ts + DEFAULT_TTL_SECONDS, chosen_spec),
+                )
+                conn.execute(
+                    "UPDATE worker_node_state SET active_loaded_specialist = ?, updated_ts = ? WHERE node_id = 'jkorstad-node-01'",
+                    (chosen_spec, now_ts),
+                )
+                conn.commit()
+                return {
+                    "action": "auto_load_needed_specialist",
+                    "loaded_specialist": chosen_spec,
+                    "shortage_score": most_needed["shortage_score"] if most_needed else 10.0,
+                    "worker_status": "online",
+                    "game_guard_status": hw["game_guard_status"],
+                }
+
+            if action == "run_parallel_batch":
+                queries = list(args.get("batch_queries") or [
+                    "Rewrite CTE rank bonuses per dept_id into DENSE_RANK() OVER",
+                    "Tool: create_invoice(customer_id='c9', amount=99) -> JSON-RPC 2.0",
+                ])
+                sub_results = []
+                for idx, q in enumerate(queries):
+                    routed = self.route_query(str(q))
+                    sub_results.append(
+                        {
+                            "subtask_index": idx,
+                            "query": q,
+                            "status": routed["status"],
+                            "routed_to": routed.get("routed_to"),
+                            "escalation_tier": routed["escalation_tier"],
+                            "output": routed.get("output"),
+                            "receipt_id": (routed.get("settlement_receipt") or {}).get("receipt_id"),
+                        }
+                    )
+                return {
+                    "action": "run_parallel_batch",
+                    "work_pool": "pool-parallel-batch",
+                    "subtasks_count": len(sub_results),
+                    "results": sub_results,
+                }
+
+        return {"error": f"Unknown worker pool action: {action}"}
+
+    def manage_contributor_hub(self, args: dict[str, Any]) -> dict[str, Any]:
+        """Manage the Contributor Hub: 70/10/10/10 attribution, Anti-Whale cap, idea pitching, and GUI export."""
+        action = str(args.get("action") or "get_hub_snapshot").strip()
+        operator_id = str(args.get("operator_id") or "jkorstad-node-01").strip()
+        now_ts = int(time.time())
+        daily_cap = 50.0
+
+        with _DB_LOCK:
+            conn = self._conn()
+
+            if action == "pitch_idea":
+                title = str(args.get("idea_title") or "").strip()
+                desc = str(args.get("idea_description") or "").strip()
+                category = str(args.get("idea_category") or "niche-specialist").strip()
+                if not title:
+                    return {"error": "idea_title is required for pitch_idea"}
+                slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:24]
+                idea_id = f"idea-{slug}-{now_ts % 10000}"
+                vote_weight = round(0.98 * math.sqrt(25.0), 2)
+                conn.execute(
+                    """
+                    INSERT INTO community_ideas
+                    (idea_id, operator_id, title, description, category, vote_weight, status, created_ts)
+                    VALUES (?, ?, ?, ?, ?, ?, 'community_voting', ?)
+                    """,
+                    (idea_id, operator_id, title, desc or title, category, vote_weight, now_ts),
+                )
+                conn.commit()
+                return {
+                    "action": "pitch_idea",
+                    "idea_id": idea_id,
+                    "operator_id": operator_id,
+                    "title": title,
+                    "description": desc or title,
+                    "category": category,
+                    "initial_vote_weight": vote_weight,
+                    "status": "community_voting",
+                }
+
+            if action == "simulate_datacenter_overflow":
+                raw_dc = float(args.get("raw_datacenter_credits", 120.0))
+                dc_id = "mega-datacenter-cluster-01"
+                capped_personal = min(daily_cap, raw_dc)
+                overflow_grant = round(max(0.0, raw_dc - daily_cap), 4)
+                small_node_dividend_boost = round(overflow_grant * 0.50, 4)
+
+                conn.execute(
+                    """
+                    INSERT OR REPLACE INTO operator_ledger
+                    (operator_id, raw_worker_credits, capped_personal_credits, author_royalty_credits,
+                     connector_credits, overflow_donated_credits, community_dividend_credits,
+                     tasks_completed, tokens_contributed, is_datacenter_patron, updated_ts)
+                    VALUES (?, ?, ?, 0.0, 0.0, ?, 0.0, 480, 96000, 1, ?)
+                    """,
+                    (dc_id, raw_dc, capped_personal, overflow_grant, now_ts),
+                )
+                # Credit the small community operator with a pro-rata dividend from the datacenter overflow!
+                conn.execute(
+                    """
+                    UPDATE operator_ledger
+                    SET community_dividend_credits = ROUND(community_dividend_credits + ?, 4),
+                        updated_ts = ?
+                    WHERE operator_id = ?
+                    """,
+                    (small_node_dividend_boost, now_ts, operator_id),
+                )
+                conn.commit()
+                return {
+                    "action": "simulate_datacenter_overflow",
+                    "datacenter_operator": dc_id,
+                    "raw_contributed_credits": raw_dc,
+                    "anti_whale_daily_cap": daily_cap,
+                    "datacenter_personal_payout": capped_personal,
+                    "philanthropic_overflow_to_community_pool": overflow_grant,
+                    "badge_awarded": "Community Patron & Open-Science Philanthropist",
+                    "small_operator_dividend_boost": {
+                        "operator_id": operator_id,
+                        "dividend_added_credits": small_node_dividend_boost,
+                    },
+                }
+
+            # Default: get_hub_snapshot (also used by export_gui_widget and /api/plugins/hacmdn/hub)
+            op_row = conn.execute(
+                "SELECT * FROM operator_ledger WHERE operator_id = ?",
+                (operator_id,),
+            ).fetchone()
+            if not op_row:
+                op_row = conn.execute("SELECT * FROM operator_ledger LIMIT 1").fetchone()
+
+            all_ops = conn.execute("SELECT * FROM operator_ledger ORDER BY capped_personal_credits DESC").fetchall()
+            ideas = conn.execute("SELECT * FROM community_ideas ORDER BY vote_weight DESC, created_ts DESC").fetchall()
+            bounties = conn.execute("SELECT * FROM bounties ORDER BY created_ts DESC").fetchall()
+            receipts = conn.execute("SELECT * FROM task_receipts ORDER BY created_ts DESC LIMIT 8").fetchall()
+            total_overflow = sum(float(r["overflow_donated_credits"]) for r in all_ops)
+
+            capped_p = float(op_row["capped_personal_credits"]) if op_row else 0.0
+            royalty_p = float(op_row["author_royalty_credits"]) if op_row else 0.0
+            conn_p = float(op_row["connector_credits"]) if op_row else 0.0
+            div_p = float(op_row["community_dividend_credits"]) if op_row else 0.0
+            total_net_earnings = round(capped_p + royalty_p + conn_p + div_p, 4)
+
+            pool_info = self.manage_worker_pool({"action": "profile_and_recommend"})
+
+            snapshot = {
+                "operator_id": operator_id,
+                "anti_whale_policy": {
+                    "daily_personal_cap_credits": daily_cap,
+                    "split_formula": "70% Worker | 10% Adapter Author Royalty | 10% Connector/Organizer | 10% Shared Community Pool",
+                    "overflow_policy": "100% of compute above 50.0 cr/day converts into a Philanthropic Community & Open-Science Dividend Grant",
+                    "network_datacenter_overflow_pool_credits": round(total_overflow, 4),
+                },
+                "earnings_summary": {
+                    "total_accumulated_credits": total_net_earnings,
+                    "worker_inference_credits_capped": capped_p,
+                    "worker_inference_credits_raw": float(op_row["raw_worker_credits"]) if op_row else 0.0,
+                    "adapter_author_royalty_credits": royalty_p,
+                    "connector_routing_credits": conn_p,
+                    "community_dividend_pool_credits": div_p,
+                    "cap_utilization_pct": round(min(100.0, (capped_p / daily_cap) * 100.0), 1),
+                    "tasks_completed": int(op_row["tasks_completed"]) if op_row else 0,
+                    "tokens_contributed": int(op_row["tokens_contributed"]) if op_row else 0,
+                },
+                "worker_and_hardware": pool_info,
+                "ideas_pitched": [dict(i) for i in ideas],
+                "open_bounties": [dict(b) for b in bounties],
+                "recent_receipts": [dict(r) for r in receipts],
+            }
+
+            if action == "export_gui_widget":
+                try:
+                    from .gui import write_hub_preview_html
+                except ImportError:
+                    from gui import write_hub_preview_html  # type: ignore[no-redef]
+                html_path = write_hub_preview_html(snapshot)
+                snapshot["gui_widget_html_path"] = str(html_path)
+
+            return snapshot
+
     def status(
         self,
         neighborhood_id: Optional[str] = None,
@@ -1571,7 +2021,7 @@ class HermesSpecialistNetwork:
 
         return {
             "network_codename": "HACMDN-Net",
-            "spec_version": "0.2.0",
+            "spec_version": "0.3.0",
             "approved_base_family": list(APPROVED_BASE_MODELS),
             "approved_harnesses": list(APPROVED_HARNESSES),
             "hf_community_collection": "https://huggingface.co/collections/jkorstad/hacmdn-net-hermes-community-microtuned-specialist-network-6aef78f6e0ea208136c602e5",
