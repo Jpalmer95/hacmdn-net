@@ -1,7 +1,7 @@
 name: hacmdn
 title: HACMDN-Net Decentralized Specialist Mesh
 repo: https://github.com/Jpalmer95/hacmdn-net
-sha: aff0368134249321a967ac7f5f9378a1ce90ef3b
+sha: 11ac5d7a22222e607900719ddd3f822b5c183f83
 description: >-
   Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) —
   routes narrow tasks across a neighborhood mesh of tiny fine-tuned Qwen3
@@ -28,6 +28,10 @@ category: models
 requires_hermes: ">=0.21.6"
 docs_url: https://github.com/Jpalmer95/hacmdn-net#readme
 version: "1.0.0"
+image: https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/11ac5d7a22222e607900719ddd3f822b5c183f83/docs/assets/banner.png
+screenshots:
+  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/11ac5d7a22222e607900719ddd3f822b5c183f83/docs/assets/contributor-hub.png
+  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/11ac5d7a22222e607900719ddd3f822b5c183f83/docs/assets/banner.png
 platforms: []
 readme: true
 capabilities:
