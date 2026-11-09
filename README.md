@@ -153,6 +153,15 @@ hermes hacmdn simulate
 
 ---
 
+## Security, Storage & Privacy Disclosure (Catalog Rule 13)
+
+- **Local Storage:** Stores neighborhood capability descriptors, fine-tuning bounties, work queues, P2P blob metadata, and attribution receipts in a profile-scoped SQLite database via `plugins.plugin_storage.plugin_db("hacmdn")` (`~/.hermes/plugin-data/hacmdn/data.db`). Writes HTML preview widgets and synthetic distillation curricula to `~/.hermes/cache/scratch/`.
+- **System Reads:** Reads `/proc/meminfo` on Linux to inspect available RAM for Game-Guard hardware profiling (`network.py`).
+- **Credentials:** Optional `HF_TOKEN` is declared as `type: secret` in `plugin.yaml` and read exclusively via `agent.secret_scope.get_secret("HF_TOKEN")`. No `.env` files, `auth.json`, keychains, or external credential stores are read.
+- **Network & Local Servers:** Core routing, bidding, distillation verification, and ledger tools run deterministically against the local SQLite coordinator with zero unsolicited network egress. The dashboard extension mounts `/api/plugins/hacmdn/{hub,action,rendezvous}` inside the Hermes web dashboard; `hermes hacmdn gui --serve` starts a loopback-only HTTP server on `127.0.0.1:8765` only when explicitly invoked by the user. No telemetry, no self-updating code, and no binary weights shipped in the plugin repository.
+
+---
+
 ## License
 
 Licensed under the **Apache License, Version 2.0** (`Copyright 2026 Jonathan Korstad`). See [`LICENSE`](LICENSE).
