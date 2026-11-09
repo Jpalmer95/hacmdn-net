@@ -1,15 +1,15 @@
 name: hacmdn
-title: HACMDN-Net Decentralized Specialist Mesh
+title: HACMDN-Net Decentralized Node Network
 repo: https://github.com/Jpalmer95/hacmdn-net
-sha: e8c760bf41719ad939bf3d86e5f4666ae365b239
+sha: b06a1484f1f0bd7652303d23976a892aa1dc418c
 description: >-
-  Hermes Agent Community Microtuned Decentralized Network (HACMDN-Net) —
+  Hermes Agent Community Microtuned Decentralized Node Network (HACMDN-Net) —
   routes narrow tasks across a neighborhood mesh of consumer-grade micro-to-32B and sparse-MoE
   specialists (10M classifiers/translators up to 32B/30B-A3B Apache-2.0 models) with semantic-entropy
   conformal abstention, confidence-weighted and proxy bidding, a 6-tier
   progressive escalation ladder, a Hugging Face ZeroGPU community buffer,
-  4 sharded compute pools with Game-Guard hardware protection, an
-  execution-verified synthetic distillation factory, Iroh QUIC P2P
+  4 sharded compute pools with Game-Guard hardware protection, self-healing missing-expertise gap sensing, validator health checks and
+  generational base-model renewal, an execution-verified distillation factory, Iroh QUIC P2P
   hole-punching and BLAKE3 LoRA blob gossip, and an value-backed 70/10/10/10 attribution ledger with a
   Community Fair-Share Cap and Patron Compute Overflow for DeSci with L402 Lightning
   micropayment settlement. Disclosure — stores neighborhood descriptors,
@@ -28,10 +28,10 @@ category: models
 requires_hermes: ">=0.21.6"
 docs_url: https://github.com/Jpalmer95/hacmdn-net#readme
 version: "1.0.0"
-image: https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/e8c760bf41719ad939bf3d86e5f4666ae365b239/docs/assets/banner.png
+image: https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/b06a1484f1f0bd7652303d23976a892aa1dc418c/docs/assets/banner.png
 screenshots:
-  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/e8c760bf41719ad939bf3d86e5f4666ae365b239/docs/assets/contributor-hub.png
-  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/e8c760bf41719ad939bf3d86e5f4666ae365b239/docs/assets/banner.png
+  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/b06a1484f1f0bd7652303d23976a892aa1dc418c/docs/assets/contributor-hub.png
+  - https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/b06a1484f1f0bd7652303d23976a892aa1dc418c/docs/assets/banner.png
 platforms: []
 readme: true
 capabilities:

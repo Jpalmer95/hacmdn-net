@@ -43,16 +43,16 @@ Instead of routing every task to a monolithic frontier LLM or running 100 identi
 
 ## Screenshots
 
-![HACMDN-Net Architecture Banner](https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/11ac5d7a22222e607900719ddd3f822b5c183f83/docs/assets/banner.png)
+![HACMDN-Net Architecture Banner](https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/b06a1484f1f0bd7652303d23976a892aa1dc418c/docs/assets/banner.png)
 
-![HACMDN-Net Contributor & Node Operator Hub](https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/11ac5d7a22222e607900719ddd3f822b5c183f83/docs/assets/contributor-hub.png)
+![HACMDN-Net Contributor & Node Operator Hub](https://raw.githubusercontent.com/Jpalmer95/hacmdn-net/b06a1484f1f0bd7652303d23976a892aa1dc418c/docs/assets/contributor-hub.png)
 
 ---
 
 ## Validation
 
 - [x] `python3 scripts/validate_plugin_catalog.py plugin-catalog/hacmdn.yaml` → `OK: 1 file(s) valid`
-- [x] `hermes plugins validate --install-deps` on clean clone at `11ac5d7a22222e607900719ddd3f822b5c183f83` → `Validation passed` (`✓ security scan — safe`, `✓ no core override`, `✓ desktop surface`)
+- [x] `hermes plugins validate --install-deps` on clean clone at `b06a1484f1f0bd7652303d23976a892aa1dc418c` → `Validation passed` (`✓ security scan — safe`, `✓ no core override`, `✓ desktop surface`)
 - [x] `python3 scripts/scan_plugin_payloads.py` → `0` findings (clean source-only tree)
 - [x] `hermes plugins doctor --ci` → `OK (7 tools registered)`
 - [x] `pytest tests/` → `10 passed in 0.32s`
