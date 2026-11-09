@@ -53,3 +53,13 @@ async def run_hub_action(body: dict[str, Any]) -> dict[str, Any]:
         }
 
     return await asyncio.to_thread(_exec)
+
+
+@router.post("/rendezvous")
+async def rendezvous_coordinator_sync(body: dict[str, Any]) -> dict[str, Any]:
+    """Outbound HTTPS/WSS Rendezvous Coordinator endpoint for NAT/CGNAT home worker nodes."""
+    def _sync() -> dict[str, Any]:
+        net = get_network()
+        return net.manage_worker_pool({"action": "sync_rendezvous_daemon", **body})
+
+    return await asyncio.to_thread(_sync)

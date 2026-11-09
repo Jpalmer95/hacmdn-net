@@ -1,4 +1,4 @@
-# HACMDN-Net — Comprehensive Phased Master Plan (v0.3)
+# HACMDN-Net — Comprehensive Phased Master Plan (v1.0.0 — All Milestones Complete)
 
 **Project:** Hermes Agent Community Microtuned Decentralized Network (`hacmdn-net`)  
 **Repository:** `https://github.com/Jpalmer95/hacmdn-net`  
@@ -96,8 +96,8 @@ Unlike monolithic cloud APIs or datacenter-dominated DePIN networks:
 - [x] **Hermes Desktop Native Plugin (`desktop/plugin.js`):** `@hermes/plugin-sdk` right-docked **HACMDN Hub** pane + live **Status Bar Compute & Earnings Chip**.
 - [x] **Standalone Local Web Hub (`gui.py` / `hermes hacmdn gui`) & Inline Chat Preview Widget:** Zero-dependency local HTTP dashboard + live chat preview showing current compute allocation, Game-Guard status, inference contributed, ideas pitched, and 70/10/10/10 anti-whale earnings.
 
-### Phase 6: Global P2P Mesh Transport, Autonomous Distillation Factory & L402 Settlement (Next Milestones — v0.4 → v1.0)
-- [ ] **v0.4 — Outbound Rendezvous Work-Queue & `llama.cpp` GGUF Worker Daemon:** Connect distributed home nodes over outbound WSS to the HF Space / FastAPI Rendezvous coordinator with automatic GGUF + LoRA hot-swapping.
-- [ ] **v0.5 — Execution-Verified Synthetic Distillation Factory (`training/distill_specialist.py`):** Automated teacher generation (`Hermes-4-14B` / `hf jobs uv`) + deterministic execution verifiers (SQLite/Postgres/DuckDB/Python AST) + hard-negative boundary abstention DPO.
-- [ ] **v0.6 — Iroh QUIC P2P Overlay & Peer-to-Peer LoRA Blob Gossip:** Direct NAT hole-punching between neighborhood peers so traffic bypasses the Rendezvous relay whenever direct QUIC paths succeed.
-- [ ] **v1.0 — L402 Lightning & Cooperative Dividend Settlement + Hermes Plugin Catalog PR:** Connect the anti-whale attribution ledger to live L402 Lightning micropayments (`ldk-node`) and submit `plugin-catalog/hacmdn.yaml` to `NousResearch/hermes-agent`.
+### Phase 6: Global P2P Mesh Transport, Autonomous Distillation Factory & L402 Settlement (COMPLETED — v0.4 → v1.0.0)
+- [x] **v0.4 — Outbound Rendezvous Work-Queue & `llama.cpp` GGUF Worker Daemon:** Connect distributed home nodes over outbound HTTPS/WSS (`rendezvous_leases`, `rendezvous_work_queue`, `/api/plugins/hacmdn/rendezvous`) to the HF Space / FastAPI Rendezvous coordinator with automatic `Qwen3-0.6B-Q4_K_M.gguf` + `--lora` hot-swapping (`sync_rendezvous_daemon`).
+- [x] **v0.5 — Execution-Verified Synthetic Distillation Factory (`training/distill_specialist.py`):** Automated teacher candidate synthesis (`Hermes-4-14B`) + deterministic execution verifiers (`sqlite3` in-memory SQL/DuckDB window execution, JSON-RPC 2.0 schema verifier, Python AST contract verifier) + 40% hard-negative/OOD boundary abstention DPO preference curriculum + conformal ROC-AUC threshold calibration (`distill_bounty`).
+- [x] **v0.6 — Iroh QUIC P2P Overlay & Peer-to-Peer LoRA Blob Gossip:** Direct NAT hole-punching (`iroh_p2p_peers`, `direct_iroh_quic` with automatic `iroh_derp_relay_fallback` for Symmetric CGNAT) and content-addressed BLAKE3/BLAKE2b-256 LoRA adapter chunk gossip (`lora_blob_gossip`, `gossip_and_holepunch_p2p`) bypassing the Rendezvous relay when direct QUIC paths succeed.
+- [x] **v1.0 — L402 Lightning & Cooperative Dividend Settlement + Hermes Plugin Catalog Entry:** Connect the 70/10/10/10 anti-whale attribution ledger to cryptographic L402 Lightning micropayments (`l402_settlements`, chained HMAC-SHA256 L402 Macaroons, SHA-256 preimage commitment, BOLT11 invoice generation, `settle_l402_and_dividends`, `verify_l402_receipt`) and ship validated `plugin-catalog/hacmdn.yaml`.

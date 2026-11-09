@@ -314,3 +314,84 @@ def test_worker_pool_and_anti_whale_contributor_hub(tmp_path: Path):
     hub = json.loads(tools.hacmdn_contributor_hub({"action": "export_gui_widget"}))
     assert Path(hub["gui_widget_html_path"]).is_file()
     assert hub["earnings_summary"]["total_accumulated_credits"] > 35.0
+
+
+def test_phase6_rendezvous_gguf_daemon_and_iroh_p2p_gossip():
+    # v0.4: Outbound HTTPS/WSS Rendezvous Work-Queue & llama.cpp GGUF+LoRA Hot-Swap Daemon
+    rv = json.loads(
+        tools.hacmdn_worker_pool(
+            {
+                "action": "sync_rendezvous_daemon",
+                "enqueue_query": "Rewrite correlated SQL subquery into SUM(amount) OVER (PARTITION BY customer_id)",
+            }
+        )
+    )
+    assert rv["action"] == "sync_rendezvous_daemon"
+    assert rv["lease_id"] == "lease-jkorstad-node-01"
+    assert rv["tasks_drained_count"] >= 2
+    assert rv["llama_cpp_daemon"]["hot_swaps_in_tick"] >= 1
+    assert "Qwen3-0.6B-Q4_K_M.gguf" in rv["llama_cpp_daemon"]["gguf_resident_base"]
+
+    # v0.6: Iroh QUIC P2P Hole-Punching & Content-Addressed BLAKE3 LoRA Blob Gossip
+    p2p = json.loads(
+        tools.hacmdn_worker_pool(
+            {
+                "action": "gossip_and_holepunch_p2p",
+                "spec_id": "qwen3-0.6b-sql-window-rewriter-v1",
+            }
+        )
+    )
+    assert p2p["action"] == "gossip_and_holepunch_p2p"
+    assert p2p["direct_quic_peers_count"] >= 2
+    assert p2p["derp_relay_fallback_peers_count"] >= 1
+    assert p2p["gossiped_lora_blob"]["blob_cid"].startswith("blake3:")
+    assert p2p["gossiped_lora_blob"]["chunks_integrity_verified"] is True
+
+
+def test_phase6_execution_verified_distillation_factory_and_l402_settlement():
+    # v0.5: Execution-Verified Synthetic Distillation Factory + 40% Hard-Negative/OOD DPO
+    distill = json.loads(
+        tools.hacmdn_bounty_flywheel(
+            {
+                "action": "distill_bounty",
+                "bounty_id": "bounty-sqlite-to-duckdb-v1",
+                "auto_submit": True,
+            }
+        )
+    )
+    assert distill["action"] == "distill_bounty"
+    assert distill["bounty_status"] == "fulfilled_and_paid"
+    rep = distill["distillation_report"]
+    vs = rep["verification_summary"]
+    assert vs["candidates_verified"] >= 5
+    assert vs["candidates_rejected_by_verifier"] >= 2
+    assert vs["dpo_preference_pairs_count"] >= 4
+    assert rep["passes_eval_before_gossip"] is True
+    assert Path(rep["curriculum_json_path"]).is_file()
+
+    # v1.0: L402 Lightning Micropayment Macaroon + Preimage Settlement & Verification
+    l402 = json.loads(
+        tools.hacmdn_contributor_hub(
+            {
+                "action": "settle_l402_and_dividends",
+                "sats_per_credit": 100,
+            }
+        )
+    )
+    assert l402["action"] == "settle_l402_and_dividends"
+    assert l402["status"] == "settled_verified"
+    assert l402["preimage_sha256_verified"] is True
+    assert l402["sats_settled"] >= 700
+    assert l402["authorization_header"].startswith("L402 macaroon:v1:")
+
+    verify = json.loads(
+        tools.hacmdn_contributor_hub(
+            {
+                "action": "verify_l402_receipt",
+                "settlement_id": l402["settlement_id"],
+            }
+        )
+    )
+    assert verify["verified"] is True
+    assert verify["payment_hash"] == l402["payment_hash"]
+

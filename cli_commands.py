@@ -49,10 +49,14 @@ def handle_slash_command(raw_args: str, **kwargs: Any) -> str:
 
     if sub in ("help", "-h", "--help"):
         return (
-            "Usage: /hacmdn [status | hub | pools | pitch <idea> | route <query> | bid <query> | bounties | vote <topic> | idle]\n"
+            "Usage: /hacmdn [status | hub | pools | rendezvous | p2p | distill [bounty_id] | l402 | pitch <idea> | route <query> | bid <query> | bounties | vote <topic> | idle]\n"
             "  /hacmdn status          Show live neighborhoods, specialists, and ZeroGPU buffer\n"
             "  /hacmdn hub             Show your Contributor Hub: 70/10/10/10 earnings, Anti-Whale cap, & pitched ideas\n"
             "  /hacmdn pools           Profile hardware (Game-Guard) & show 4 work pools + Shortage Scores\n"
+            "  /hacmdn rendezvous      Sync Outbound HTTPS/WSS Rendezvous Lease & llama.cpp GGUF/LoRA hot-swap daemon\n"
+            "  /hacmdn p2p             Negotiate Iroh QUIC hole-punching & BLAKE3 LoRA blob gossip\n"
+            "  /hacmdn distill [id]    Run Execution-Verified Synthetic Distillation + 40% Boundary DPO on a bounty\n"
+            "  /hacmdn l402            Settle accumulated credits & cooperative dividends via L402 Lightning\n"
             "  /hacmdn pitch <idea>    Pitch a new community directive or niche specialist idea\n"
             "  /hacmdn route <query>   Route a task through the 6-tier escalation ladder\n"
             "  /hacmdn bid <query>     Run confidence-weighted bidding across specialists\n"
@@ -69,6 +73,19 @@ def handle_slash_command(raw_args: str, **kwargs: Any) -> str:
 
     if sub == "pools":
         return json.dumps(net.manage_worker_pool({"action": "profile_and_recommend"}), indent=2)
+
+    if sub == "rendezvous":
+        return json.dumps(net.manage_worker_pool({"action": "sync_rendezvous_daemon", "enqueue_query": rest}), indent=2)
+
+    if sub == "p2p":
+        return json.dumps(net.manage_worker_pool({"action": "gossip_and_holepunch_p2p", "spec_id": rest}), indent=2)
+
+    if sub == "distill":
+        bid = rest or "bounty-sqlite-to-duckdb-v1"
+        return json.dumps(net.manage_flywheel({"action": "distill_bounty", "bounty_id": bid}), indent=2)
+
+    if sub == "l402":
+        return json.dumps(net.manage_contributor_hub({"action": "settle_l402_and_dividends"}), indent=2)
 
     if sub == "pitch":
         if not rest:
@@ -125,6 +142,13 @@ def setup_cli_parser(subparser: Any) -> None:
 
     subs.add_parser("hub", help="Show Contributor & Node Operator Hub (earnings, Anti-Whale cap, pools, ideas)")
     subs.add_parser("pools", help="Profile local hardware (Game-Guard) and show Shortage Scores & 4 work pools")
+    subs.add_parser("rendezvous", help="Sync Outbound HTTPS/WSS Rendezvous Lease & llama.cpp GGUF/LoRA hot-swap daemon")
+    subs.add_parser("p2p", help="Negotiate Iroh QUIC P2P hole-punching & BLAKE3 LoRA blob gossip")
+
+    p_distill = subs.add_parser("distill", help="Run Execution-Verified Synthetic Distillation Factory on a bounty")
+    p_distill.add_argument("--bounty-id", default="bounty-sqlite-to-duckdb-v1", help="Bounty ID to distill")
+
+    subs.add_parser("l402", help="Settle accumulated credits & cooperative dividends via L402 Lightning")
 
     p_gui = subs.add_parser("gui", help="Export or serve the lightweight HACMDN-Net Contributor Hub GUI")
     p_gui.add_argument("--serve", action="store_true", help="Start local HTTP server on 127.0.0.1:8765")
@@ -174,6 +198,28 @@ def handle_cli_command(args: Any) -> None:
 
     if sub == "pools":
         res = net.manage_worker_pool({"action": "profile_and_recommend"})
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "rendezvous":
+        res = net.manage_worker_pool({"action": "sync_rendezvous_daemon"})
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "p2p":
+        res = net.manage_worker_pool({"action": "gossip_and_holepunch_p2p"})
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "distill":
+        res = net.manage_flywheel(
+            {"action": "distill_bounty", "bounty_id": getattr(args, "bounty_id", "bounty-sqlite-to-duckdb-v1")}
+        )
+        print(json.dumps(res, indent=2))
+        return
+
+    if sub == "l402":
+        res = net.manage_contributor_hub({"action": "settle_l402_and_dividends"})
         print(json.dumps(res, indent=2))
         return
 

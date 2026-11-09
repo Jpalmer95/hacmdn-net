@@ -1,4 +1,4 @@
-// Native Hermes Desktop Plugin (`@hermes/plugin-sdk`) for HACMDN-Net (v0.3.0)
+// Native Hermes Desktop Plugin (`@hermes/plugin-sdk`) for HACMDN-Net (v1.0.0)
 // Contributes:
 //   1. Right-docked "HACMDN Hub" pane showing live compute pools, Game-Guard status,
 //      70/10/10/10 shared-entity earnings, Anti-Whale daily cap meter, and pitched ideas.

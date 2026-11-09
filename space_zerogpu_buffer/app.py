@@ -264,7 +264,7 @@ def build_app() -> gr.Blocks:
                     api_visibility="public",
                 )
 
-            with gr.Tab("4. JIT Fine-Tuning Flywheel, Governance & Idle Pool"):
+            with gr.Tab("4. JIT Fine-Tuning Flywheel, Distillation Factory & Governance"):
                 with gr.Row():
                     act_in = gr.Dropdown(
                         [
@@ -272,12 +272,13 @@ def build_app() -> gr.Blocks:
                             "open_bounty",
                             "claim_bounty",
                             "submit_bounty_adapter",
+                            "distill_bounty",
                             "vote_directive",
                             "run_idle_pool_task",
                             "audit_challenge",
                         ],
                         value="list_bounties",
-                        label="Flywheel / Governance Action",
+                        label="Flywheel / Distillation / Governance Action",
                     )
                     gap_in = gr.Textbox(label="Gap Domain / Directive Topic", value="open-science-ligand-screening")
                     bounty_in = gr.Textbox(label="Bounty ID", value="bounty-sqlite-to-duckdb-v1")
@@ -286,12 +287,40 @@ def build_app() -> gr.Blocks:
                         value="open-science",
                         label="Idle Pool Category",
                     )
-                fw_btn = gr.Button("Execute Flywheel / Governance Action", variant="primary")
-                fw_out = gr.Code(label="Flywheel & Governance Ledger", language="json")
+                fw_btn = gr.Button("Execute Flywheel / Distillation Action", variant="primary")
+                fw_out = gr.Code(label="Flywheel & Distillation Ledger", language="json")
                 fw_btn.click(
                     fn=ui_flywheel_action,
                     inputs=[act_in, gap_in, bounty_in, idle_in],
                     outputs=[fw_out],
+                    api_visibility="public",
+                )
+
+            with gr.Tab("5. Rendezvous GGUF Daemon, Iroh QUIC P2P & L402 Lightning"):
+                with gr.Row():
+                    mesh_act = gr.Dropdown(
+                        [
+                            "sync_rendezvous_daemon",
+                            "gossip_and_holepunch_p2p",
+                            "settle_l402_and_dividends",
+                            "simulate_datacenter_overflow",
+                        ],
+                        value="sync_rendezvous_daemon",
+                        label="Mesh Transport / L402 Action",
+                    )
+                mesh_btn = gr.Button("Run Mesh / L402 Action", variant="primary")
+                mesh_out = gr.Code(label="Mesh & L402 Settlement Output", language="json")
+
+                def _ui_mesh_l402(action_name: str) -> str:
+                    net = get_network()
+                    if action_name in ("sync_rendezvous_daemon", "gossip_and_holepunch_p2p"):
+                        return json.dumps(net.manage_worker_pool({"action": action_name}), indent=2)
+                    return json.dumps(net.manage_contributor_hub({"action": action_name}), indent=2)
+
+                mesh_btn.click(
+                    fn=_ui_mesh_l402,
+                    inputs=[mesh_act],
+                    outputs=[mesh_out],
                     api_visibility="public",
                 )
 

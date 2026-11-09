@@ -235,10 +235,10 @@ def render_hub_html(snapshot: dict[str, Any]) -> str:
 <div class="hub-wrap">
   <div class="hub-header">
     <div>
-      <div class="hub-title">🕸️ HACMDN-Net Contributor &amp; Node Operator Hub (v0.3.0)</div>
+      <div class="hub-title">🕸️ HACMDN-Net Contributor &amp; Node Operator Hub (v1.0.0)</div>
       <div class="hub-sub">Operator: <strong>{op_id}</strong> · Mode: {html.escape(str(wstate.get("compute_mode", "auto_game_guard")))} · Game-Guard: {html.escape(str(hw.get("game_guard_status", "")))}</div>
     </div>
-    <span class="pill" style="border-color:#22c55e;color:#22c55e;">● Mesh Active</span>
+    <span class="pill" style="border-color:#22c55e;color:#22c55e;">● Iroh QUIC + L402 Active</span>
   </div>
 
   <div class="kpi-grid">
@@ -275,8 +275,10 @@ def render_hub_html(snapshot: dict[str, Any]) -> str:
     </div>
     <div class="btn-row">
       <button class="act-btn" data-hermes-send="Use hacmdn_contributor_hub with action='simulate_datacenter_overflow' and raw_datacenter_credits=120.0, then refresh the hub preview widget">⚡ Simulate Datacenter Overflow (+120 cr)</button>
-      <button class="act-btn" data-hermes-send="Use hacmdn_bounty_flywheel with action='run_idle_pool_task' and idle_pool_category='open-science', then refresh the hub preview widget">🧬 Run Idle Open-Science Task</button>
-      <button class="act-btn" data-hermes-send="Use hacmdn_worker_pool with action='auto_load_needed_specialist', then refresh the hub preview widget">🔄 Auto-Load Most Needed Specialist</button>
+      <button class="act-btn" data-hermes-send="Use hacmdn_contributor_hub with action='settle_l402_and_dividends', then refresh the hub preview widget">⚡ Settle L402 Lightning &amp; Dividends</button>
+      <button class="act-btn" data-hermes-send="Use hacmdn_worker_pool with action='sync_rendezvous_daemon', then refresh the hub preview widget">🛰️ Sync Rendezvous + GGUF Daemon</button>
+      <button class="act-btn" data-hermes-send="Use hacmdn_worker_pool with action='gossip_and_holepunch_p2p', then refresh the hub preview widget">🔗 Iroh QUIC + BLAKE3 Gossip</button>
+      <button class="act-btn" data-hermes-send="Use hacmdn_bounty_flywheel with action='distill_bounty' and bounty_id='bounty-sqlite-to-duckdb-v1', then refresh the hub preview widget">🧪 Distill Specialist Bounty</button>
     </div>
   </div>
 

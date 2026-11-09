@@ -65,7 +65,7 @@
           React.createElement(
             CardTitle,
             null,
-            "🕸️ HACMDN-Net Contributor & Node Operator Hub (v0.3.0)"
+            "🕸️ HACMDN-Net Contributor & Node Operator Hub (v1.0.0)"
           )
         ),
         React.createElement(

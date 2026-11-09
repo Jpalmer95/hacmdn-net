@@ -159,9 +159,10 @@ HACMDN_BID_TASK = {
 HACMDN_BOUNTY_FLYWHEEL = {
     "name": "hacmdn_bounty_flywheel",
     "description": (
-        "Interact with the HACMDN-Net JIT Fine-Tuning Flywheel, Community Governance Votes, and Idle "
-        "Open-Science / Local-Business Compute Pool. Actions: 'list_bounties', 'open_bounty', 'claim_bounty', "
-        "'submit_bounty_adapter', 'vote_directive', 'run_idle_pool_task', 'audit_challenge'."
+        "Interact with the HACMDN-Net JIT Fine-Tuning Flywheel, Execution-Verified Synthetic Distillation "
+        "Factory, Community Governance Votes, and Idle Open-Science / Local-Business Compute Pool. Actions: "
+        "'list_bounties', 'open_bounty', 'claim_bounty', 'submit_bounty_adapter', 'distill_bounty', "
+        "'vote_directive', 'run_idle_pool_task', 'audit_challenge'."
     ),
     "parameters": {
         "type": "object",
@@ -173,15 +174,20 @@ HACMDN_BOUNTY_FLYWHEEL = {
                     "open_bounty",
                     "claim_bounty",
                     "submit_bounty_adapter",
+                    "distill_bounty",
                     "vote_directive",
                     "run_idle_pool_task",
                     "audit_challenge",
                 ],
-                "description": "Flywheel or governance operation to execute.",
+                "description": "Flywheel, synthetic distillation, or governance operation to execute.",
             },
             "bounty_id": {
                 "type": "string",
-                "description": "Bounty ID for 'claim_bounty' or 'submit_bounty_adapter'.",
+                "description": "Bounty ID for 'claim_bounty', 'submit_bounty_adapter', or 'distill_bounty'.",
+            },
+            "auto_submit": {
+                "type": "boolean",
+                "description": "For 'distill_bounty': automatically publish and fulfill the bounty when Eval-Before-Gossip passes (default: true).",
             },
             "gap_domain": {
                 "type": "string",
@@ -254,8 +260,9 @@ HACMDN_WORKER_POOL = {
         "Manage this machine's participation in the HACMDN-Net decentralized compute mesh. "
         "Profiles local CPU/RAM/GPU hardware with Game-Guard (never interrupting active games/renders), "
         "computes Neighborhood Shortage Scores to auto-select which niche Qwen3-0.6B specialist is needed most, "
-        "allocates compute across the 4 work pools ('pool-interactive-micro', 'pool-parallel-batch', "
-        "'pool-idle-community', 'pool-jit-finetune'), or runs a parallel multi-query batch across the mesh."
+        "syncs the Outbound HTTPS/WSS Rendezvous Work-Queue & llama.cpp GGUF+LoRA hot-swap daemon "
+        "('sync_rendezvous_daemon'), negotiates Iroh QUIC P2P hole-punching & BLAKE3 LoRA blob gossip "
+        "('gossip_and_holepunch_p2p'), allocates compute across the 4 work pools, or runs a parallel batch."
     ),
     "parameters": {
         "type": "object",
@@ -267,8 +274,18 @@ HACMDN_WORKER_POOL = {
                     "configure_worker",
                     "auto_load_needed_specialist",
                     "run_parallel_batch",
+                    "sync_rendezvous_daemon",
+                    "gossip_and_holepunch_p2p",
                 ],
-                "description": "Worker pool operation to run.",
+                "description": "Worker pool or P2P mesh operation to run.",
+            },
+            "spec_id": {
+                "type": "string",
+                "description": "Optional specialist ID to gossip/fetch via Iroh QUIC in 'gossip_and_holepunch_p2p'.",
+            },
+            "enqueue_query": {
+                "type": "string",
+                "description": "Optional query to enqueue into the Outbound Rendezvous Work-Queue before draining in 'sync_rendezvous_daemon'.",
             },
             "compute_mode": {
                 "type": "string",
@@ -296,7 +313,9 @@ HACMDN_CONTRIBUTOR_HUB = {
         "Access the HACMDN-Net Contributor & Node Operator Hub: view accumulated earnings and the "
         "70/10/10/10 Shared-Entity Attribution breakdown (Worker Inference + Adapter Author Royalties + "
         "Connector Routing + Shared Community Pool), check the Anti-Whale Daily Cap & Datacenter Overflow "
-        "Dividend Pool, pitch a new idea/directive to the community, or render the interactive GUI Hub."
+        "Dividend Pool, settle L402 Lightning Network micropayments & cooperative dividends "
+        "('settle_l402_and_dividends' / 'verify_l402_receipt'), pitch a new idea/directive to the community, "
+        "or render the interactive GUI Hub."
     ),
     "parameters": {
         "type": "object",
@@ -307,9 +326,23 @@ HACMDN_CONTRIBUTOR_HUB = {
                     "get_hub_snapshot",
                     "pitch_idea",
                     "simulate_datacenter_overflow",
+                    "settle_l402_and_dividends",
+                    "verify_l402_receipt",
                     "export_gui_widget",
                 ],
-                "description": "Hub action to perform.",
+                "description": "Hub or L402 Lightning settlement action to perform.",
+            },
+            "settlement_id": {
+                "type": "string",
+                "description": "Optional L402 settlement ID for 'verify_l402_receipt'.",
+            },
+            "payment_preimage": {
+                "type": "string",
+                "description": "Optional hex preimage to verify against the L402 payment_hash.",
+            },
+            "sats_per_credit": {
+                "type": "integer",
+                "description": "Conversion rate in satoshis per network credit for 'settle_l402_and_dividends' (default: 100).",
             },
             "operator_id": {
                 "type": "string",

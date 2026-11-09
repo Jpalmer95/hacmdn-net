@@ -107,14 +107,22 @@ hermes plugins enable hacmdn
 | `hacmdn_route_query` | Route any query through the Neighborhood Connector, Bidding Protocol, and 6-Tier Escalation Ladder (with ZeroGPU Buffer fallback & escrow receipt). |
 | `hacmdn_bid_task` | Run a transparent Confidence-Weighted Bidding round (direct worker bids + Neighborhood Connector proxy bids). |
 | `hacmdn_publish_specialist` | Verify a new `Qwen3` specialist via **Eval-Before-Gossip** (`eval_score >= base_model_score + 0.15`) and publish its Capability Descriptor. |
-| `hacmdn_bounty_flywheel` | List/open/claim/fulfill **JIT Fine-Tuning Bounties**, cast stake-weighted **Community Governance Votes**, or run **Idle Compute Pool** tasks (`open-science`, `local-business-aid`, `network-calibration`). |
+| `hacmdn_bounty_flywheel` | List/open/claim/fulfill **JIT Fine-Tuning Bounties**, run the **Execution-Verified Synthetic Distillation Factory (`distill_bounty`)**, cast stake-weighted **Community Governance Votes**, or run **Idle Compute Pool** tasks (`open-science`, `local-business-aid`, `network-calibration`). |
 | `hacmdn_network_status` | Inspect active neighborhoods, organizers, registered micro-specialists, ZeroGPU buffer status, and settled escrow receipts. |
+| `hacmdn_worker_pool` | Profile hardware with **Game-Guard**, compute Shortage Scores, sync the **Outbound HTTPS/WSS Rendezvous Work-Queue & `llama.cpp` GGUF+LoRA Hot-Swap Daemon (`sync_rendezvous_daemon`)**, negotiate **Iroh QUIC P2P Hole-Punching & BLAKE3 LoRA Blob Gossip (`gossip_and_holepunch_p2p`)**, or execute parallel batch swarms. |
+| `hacmdn_contributor_hub` | View **70/10/10/10 Shared-Entity Attribution** & **50.0 cr/day Anti-Whale Community Cap**, simulate philanthropic datacenter overflow, settle **L402 Lightning Network Micropayments & Cooperative Dividends (`settle_l402_and_dividends`, `verify_l402_receipt`)**, pitch community ideas, or export the Tri-Surface GUI Hub. |
 
 ### In-Session Slash Commands & CLI
 
 ```text
 # Inside any Hermes chat session (CLI, Desktop, Telegram, Discord):
 /hacmdn status
+/hacmdn hub
+/hacmdn pools
+/hacmdn rendezvous
+/hacmdn p2p
+/hacmdn distill bounty-sqlite-to-duckdb-v1
+/hacmdn l402
 /hacmdn route Rewrite this PostgreSQL CTE query into a ROW_NUMBER() window function
 /hacmdn bid Tool: create_invoice(customer_id='c9', amount=99)
 /hacmdn bounties
@@ -123,8 +131,14 @@ hermes plugins enable hacmdn
 
 # From a terminal:
 hermes hacmdn status
+hermes hacmdn hub
+hermes hacmdn pools
+hermes hacmdn rendezvous
+hermes hacmdn p2p
+hermes hacmdn distill --bounty-id bounty-sqlite-to-duckdb-v1
+hermes hacmdn l402
+hermes hacmdn gui --serve
 hermes hacmdn simulate
-hermes hacmdn route "Synthesize a JSON-RPC 2.0 tool call for calculate_shipping"
 ```
 
 ---
