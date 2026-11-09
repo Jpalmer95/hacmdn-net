@@ -5,7 +5,9 @@ __pycache__/
 .venv/
 venv/
 build/
-dist/
+/dist/
+!dashboard/dist/
+!dashboard/dist/**
 *.egg-info/
 .DS_Store
 training/checkpoints/
